@@ -251,7 +251,8 @@ async function handleAddMasterItem(event) {
         Item_Name: document.getElementById('add-name').value.trim(),
         Category: document.getElementById('add-category').value,
         Unit: document.getElementById('add-unit').value,
-        Min_Stock: document.getElementById('add-min').value
+        Min_Stock: document.getElementById('add-min').value,
+        Admin_PIN: document.getElementById('add-pin').value
     };
 
     if (!payload.Category || !payload.Unit) {
