@@ -2,6 +2,7 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCFY9S47tGGG450vY81ZjbyF2C6ZM8GPAKsVxftBWrbaZpONFuZ0FZDaLQyVfX2BIOsg/exec';
 
 let masterItems = [];
+let authorizedPin = ""; // Store pin for backend validation
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchItems();
@@ -16,6 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function switchTab(viewId) {
+    // Reset any authorized PIN when navigating away
+    if (viewId !== 'add_item') {
+        authorizedPin = "";
+    }
+
     // Update nav buttons
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
@@ -242,6 +248,41 @@ async function handleTransaction(event, type) {
     }
 }
 
+// --- PIN Modal Logic ---
+function promptPin() {
+    document.getElementById('pin-modal').style.display = 'flex';
+    document.getElementById('modal-pin-input').focus();
+}
+
+function closePinModal() {
+    document.getElementById('pin-modal').style.display = 'none';
+    document.getElementById('modal-pin-input').value = '';
+}
+
+function checkPin() {
+    const inputPin = document.getElementById('modal-pin-input').value;
+
+    // Front-end check matching back-end. 
+    // We also send this to the back-end via API payload for complete validation.
+    if (inputPin === "8899") {
+        authorizedPin = inputPin;
+        closePinModal();
+
+        // Remove active from other tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-tab-add').classList.add('active');
+
+        // Show correct view
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        document.getElementById('view-add_item').classList.add('active');
+
+    } else {
+        showToast('PIN Keselamatan Salah!', 'error');
+        document.getElementById('modal-pin-input').value = '';
+        document.getElementById('modal-pin-input').focus();
+    }
+}
+
 // Handler for adding new Master Item
 async function handleAddMasterItem(event) {
     event.preventDefault();
@@ -252,7 +293,7 @@ async function handleAddMasterItem(event) {
         Category: document.getElementById('add-category').value,
         Unit: document.getElementById('add-unit').value,
         Min_Stock: document.getElementById('add-min').value,
-        Admin_PIN: document.getElementById('add-pin').value
+        Admin_PIN: authorizedPin // Use the pin authorized from modal
     };
 
     if (!payload.Category || !payload.Unit) {
@@ -273,6 +314,7 @@ async function handleAddMasterItem(event) {
         if (response.ok && data.status === 'success') {
             showToast(data.message);
             event.target.reset();
+            authorizedPin = ""; // Reset security pin on success
 
             // Refresh items so it appears in dropdowns immediately
             await fetchItems();
