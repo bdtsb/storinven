@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BDT storinven</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="./static/css/style.css">
 </head>
+
 <body>
     <div class="loader-overlay" id="global-loader">
         <div class="spinner"></div>
@@ -29,7 +31,7 @@
         <!-- Dashboard View -->
         <div id="view-dashboard" class="view-section active">
             <h2 class="section-title">Overview</h2>
-            
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-title">Total Items Managed</div>
@@ -45,7 +47,8 @@
                 </div>
             </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Low Stock Warning</h3>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Low
+                Stock Warning</h3>
             <div class="table-responsive">
                 <table id="low-stock-table">
                     <thead>
@@ -57,12 +60,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                        <tr>
+                            <td colspan="4" style="text-align:center;">Loading...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Recent Transactions (Last 20)</h3>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Recent
+                Transactions (Last 20)</h3>
             <div class="table-responsive">
                 <table id="recent-trans-table">
                     <thead>
@@ -76,7 +82,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+                        <tr>
+                            <td colspan="6" style="text-align:center;">Loading...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -88,13 +96,15 @@
             <form onsubmit="handleTransaction(event, 'STOCK_IN')">
                 <div class="form-group combo-box">
                     <label>Search Item</label>
-                    <input type="text" id="in-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('in', this.value)" onfocus="showDropdown('in')">
+                    <input type="text" id="in-search" placeholder="Type Item ID or Name..." autocomplete="off"
+                        oninput="filterDropdown('in', this.value)" onfocus="showDropdown('in')">
                     <input type="hidden" id="in-item-id" required>
                     <input type="hidden" id="in-item-name">
                     <div class="combo-list" id="in-dropdown"></div>
-                    <small id="in-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                    <small id="in-current-stock"
+                        style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Quantity</label>
                     <input type="number" id="in-qty" min="1" required placeholder="Enter quantity received">
@@ -104,7 +114,7 @@
                     <label>Remarks / Supplier (Optional)</label>
                     <input type="text" id="in-remarks" placeholder="Delivery Order No. or Supplier Name">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Entered By</label>
                     <input type="text" id="in-user" required placeholder="Your Name" value="Storekeeper">
@@ -120,13 +130,15 @@
             <form onsubmit="handleTransaction(event, 'STOCK_OUT')">
                 <div class="form-group combo-box">
                     <label>Search Item</label>
-                    <input type="text" id="out-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
+                    <input type="text" id="out-search" placeholder="Type Item ID or Name..." autocomplete="off"
+                        oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
                     <input type="hidden" id="out-item-id" required>
                     <input type="hidden" id="out-item-name">
                     <div class="combo-list" id="out-dropdown"></div>
-                    <small id="out-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                    <small id="out-current-stock"
+                        style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Quantity</label>
                     <input type="number" id="out-qty" min="1" required placeholder="Enter quantity required">
@@ -136,7 +148,7 @@
                     <label>Project Name</label>
                     <input type="text" id="out-project" required placeholder="Where is this item going?">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Entered By</label>
                     <input type="text" id="out-user" required placeholder="Your Name" value="Storekeeper">
@@ -152,13 +164,15 @@
             <form onsubmit="handleTransaction(event, 'RETURN')">
                 <div class="form-group combo-box">
                     <label>Search Item</label>
-                    <input type="text" id="ret-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
+                    <input type="text" id="ret-search" placeholder="Type Item ID or Name..." autocomplete="off"
+                        oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
                     <input type="hidden" id="ret-item-id" required>
                     <input type="hidden" id="ret-item-name">
                     <div class="combo-list" id="ret-dropdown"></div>
-                    <small id="ret-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                    <small id="ret-current-stock"
+                        style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Quantity Returned</label>
                     <input type="number" id="ret-qty" min="1" required placeholder="Enter quantity returned">
@@ -168,19 +182,21 @@
                     <label>Returning Project / Remarks</label>
                     <input type="text" id="ret-project" required placeholder="Which project is returning this?">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Entered By</label>
                     <input type="text" id="ret-user" required placeholder="Your Name" value="Storekeeper">
                 </div>
 
-                <button type="submit" class="btn-submit" style="background-color: #8e44ad;">Terima Pemulangan (Return)</button>
+                <button type="submit" class="btn-submit" style="background-color: #8e44ad;">Terima Pemulangan
+                    (Return)</button>
             </form>
         </div>
     </div>
 
     <div id="toast">Message goes here</div>
 
-    <script src="/static/js/main.js"></script>
+    <script src="./static/js/main.js"></script>
 </body>
+
 </html>
