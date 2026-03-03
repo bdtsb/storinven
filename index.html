@@ -91,40 +91,6 @@
             </div>
         </div>
 
-        <!-- Stock In View -->
-        <div id="view-stock_in" class="view-section">
-            <h2 class="section-title">Receive New Stock</h2>
-            <form onsubmit="handleTransaction(event, 'STOCK_IN')">
-                <div class="form-group combo-box">
-                    <label>Search Item</label>
-                    <input type="text" id="in-search" placeholder="Type Item ID or Name..." autocomplete="off"
-                        oninput="filterDropdown('in', this.value)" onfocus="showDropdown('in')">
-                    <input type="hidden" id="in-item-id" required>
-                    <input type="hidden" id="in-item-name">
-                    <div class="combo-list" id="in-dropdown"></div>
-                    <small id="in-current-stock"
-                        style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
-                </div>
-
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="in-qty" min="1" required placeholder="Enter quantity received">
-                </div>
-
-                <div class="form-group">
-                    <label>Remarks / Supplier (Optional)</label>
-                    <input type="text" id="in-remarks" placeholder="Delivery Order No. or Supplier Name">
-                </div>
-
-                <div class="form-group">
-                    <label>Entered By</label>
-                    <input type="text" id="in-user" required placeholder="Your Name" value="Storekeeper">
-                </div>
-
-                <button type="submit" class="btn-submit">Sahkan Kemasukan Barang (Stock In)</button>
-            </form>
-        </div>
-
         <!-- Stock Out View -->
         <div id="view-stock_out" class="view-section">
             <h2 class="section-title">Release Stock to Project</h2>
@@ -194,14 +160,18 @@
             </form>
         </div>
 
-        <!-- Add Item View -->
+        <!-- Add Item / Stock In Unified View -->
         <div id="view-add_item" class="view-section">
-            <h2 class="section-title">Daftar Barang Baru (Master Item)</h2>
-            <form onsubmit="handleAddMasterItem(event)">
-                <div class="form-group">
-                    <label>ID Barang (Item ID)</label>
-                    <input type="text" id="add-id" required placeholder="Contoh: ITM999" autocomplete="off"
+            <h2 class="section-title">Tambah / Terima Barang</h2>
+            <form onsubmit="handleUnifiedAdd(event)">
+                <div class="form-group combo-box">
+                    <label>ID Barang (Cari Item Sedia Ada atau Taip ID Baru)</label>
+                    <input type="text" id="add-search" placeholder="Contoh: ITM999" autocomplete="off"
+                        oninput="filterUnifiedDropdown(this.value)" onfocus="showUnifiedDropdown()"
                         style="text-transform: uppercase;">
+                    <div class="combo-list" id="add-dropdown"></div>
+                    <input type="hidden" id="add-item-id">
+                    <small id="add-status" style="display:block; margin-top:0.3rem;"></small>
                 </div>
 
                 <div class="form-group">
@@ -210,41 +180,58 @@
                         autocomplete="off">
                 </div>
 
-                <div class="form-group">
-                    <label>Kategori (Category)</label>
-                    <select id="add-category" required
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
-                        <option value="" disabled selected>Pilih Kategori...</option>
-                        <option value="Equipment">Equipment</option>
-                        <option value="Spare Part">Spare Part</option>
-                        <option value="Consumable">Consumable</option>
-                        <option value="Lain-Lain">Lain-Lain</option>
-                    </select>
+                <!-- Hidden by JS if item already exists -->
+                <div id="new-item-fields">
+                    <div class="form-group">
+                        <label>Kategori (Category)</label>
+                        <select id="add-category"
+                            style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
+                            <option value="" disabled selected>Pilih Kategori...</option>
+                            <option value="Equipment">Equipment</option>
+                            <option value="Spare Part">Spare Part</option>
+                            <option value="Consumable">Consumable</option>
+                            <option value="Lain-Lain">Lain-Lain</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Unit Ukuran (Unit)</label>
+                        <select id="add-unit"
+                            style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
+                            <option value="" disabled selected>Pilih Unit...</option>
+                            <option value="Unit">Unit</option>
+                            <option value="Box">Box</option>
+                            <option value="Meter">Meter</option>
+                            <option value="Piece">Piece</option>
+                            <option value="Pair">Pair</option>
+                            <option value="Set">Set</option>
+                            <option value="Can">Can</option>
+                            <option value="Roll">Roll</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stok Amaran (Minimum Threshold)</label>
+                        <input type="number" id="add-min" min="0" placeholder="Amaran stok rendah (Low stock alert)">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Unit Ukuran (Unit)</label>
-                    <select id="add-unit" required
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
-                        <option value="" disabled selected>Pilih Unit...</option>
-                        <option value="Unit">Unit</option>
-                        <option value="Box">Box</option>
-                        <option value="Meter">Meter</option>
-                        <option value="Piece">Piece</option>
-                        <option value="Pair">Pair</option>
-                        <option value="Set">Set</option>
-                        <option value="Can">Can</option>
-                        <option value="Roll">Roll</option>
-                    </select>
+                    <label>Kuantiti (Stock In)</label>
+                    <input type="number" id="add-qty" min="1" required placeholder="Sila masukkan kuantiti penerimaan">
                 </div>
 
                 <div class="form-group">
-                    <label>Stok Amaran (Minimum Threshold)</label>
-                    <input type="number" id="add-min" min="0" required
-                        placeholder="Sistem akan amaran jika stok jatuh bawah nombor ini">
+                    <label>Remarks / Supplier (Jika ada)</label>
+                    <input type="text" id="add-remarks" placeholder="Delivery Order No. / Supplier">
                 </div>
 
-                <button type="submit" class="btn-submit" style="background-color: #27ae60;">Daftarkan Barang
+                <div class="form-group">
+                    <label>Didaftarkan Oleh</label>
+                    <input type="text" id="add-user" required placeholder="Nama Anda" value="Storekeeper">
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: #27ae60;">Sahkan Pengesahan Stok
                     Baru</button>
             </form>
         </div>

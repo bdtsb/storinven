@@ -55,8 +55,13 @@ async function fetchItems() {
             document.getElementById('stat-low-stock').textContent = lowStockItems.length;
             renderLowStockTable(lowStockItems);
 
+            document.getElementById('stat-low-stock').textContent = lowStockItems.length;
+            renderLowStockTable(lowStockItems);
+
             // Re-render dropdowns just in case
-            ['in', 'out', 'ret'].forEach(prefix => filterDropdown(prefix, ''));
+            ['out', 'ret'].forEach(prefix => filterDropdown(prefix, ''));
+            // And unified dropdown
+            if (document.getElementById('add-search')) filterUnifiedDropdown('');
         }
     } catch (error) {
         showToast('Error loading items from database', 'error');
@@ -173,6 +178,90 @@ function filterDropdown(prefix, query) {
     dropdown.innerHTML = html;
 }
 
+// --- Unified Add/Receive Item Dropdown Logic ---
+function showUnifiedDropdown() {
+    document.getElementById(`add-dropdown`).classList.add('active');
+    filterUnifiedDropdown(document.getElementById(`add-search`).value);
+}
+
+function selectUnifiedItem(id, name, stock, unit, category, minStock) {
+    document.getElementById('add-search').value = id; // Just show ID in search bar
+    document.getElementById('add-dropdown').classList.remove('active');
+
+    // Auto-fill and lock existing item
+    document.getElementById('add-item-id').value = id;
+    document.getElementById('add-name').value = name;
+    document.getElementById('add-name').readOnly = true;
+    document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
+
+    // Hide new item specific fields
+    document.getElementById('new-item-fields').style.display = 'none';
+
+    // Update status UI
+    document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${stock || 0} ${unit})`;
+    document.getElementById('add-status').style.color = 'var(--text-secondary)';
+}
+
+function filterUnifiedDropdown(query) {
+    const q = query.toLowerCase().trim();
+    const dropdown = document.getElementById(`add-dropdown`);
+
+    // If the exact ID is typed manually without clicking dropdown, auto-select it.
+    // Otherwise, treat it as a new item typing.
+    const exactMatch = masterItems.find(item => String(item.Item_ID).toLowerCase() === q);
+
+    if (exactMatch) {
+        // Setup existing item view
+        document.getElementById('add-item-id').value = exactMatch.Item_ID;
+        document.getElementById('add-name').value = exactMatch.Item_Name;
+        document.getElementById('add-name').readOnly = true;
+        document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
+        document.getElementById('new-item-fields').style.display = 'none';
+        document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
+        document.getElementById('add-status').style.color = 'var(--text-secondary)';
+    } else {
+        // Reset to new item mode
+        document.getElementById('add-item-id').value = '';
+        document.getElementById('add-name').readOnly = false;
+        document.getElementById('add-name').style.backgroundColor = 'white';
+        document.getElementById('new-item-fields').style.display = 'block';
+        if (q.length > 0) {
+            document.getElementById('add-status').innerHTML = `Item Baru (Sila lengkapkan butiran di bawah)`;
+            document.getElementById('add-status').style.color = 'var(--success-color)';
+        } else {
+            document.getElementById('add-status').innerHTML = ``;
+        }
+    }
+
+    const matched = masterItems.filter(item =>
+        String(item.Item_ID).toLowerCase().includes(q) ||
+        String(item.Item_Name).toLowerCase().includes(q)
+    );
+
+    if (matched.length === 0) {
+        if (q.length > 0) {
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Daftar Item Baru</div>';
+        } else {
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item. Taip untuk mencari atau daftar baru.</div>';
+        }
+        return;
+    }
+
+    const displayLimit = 50;
+    let html = matched.slice(0, displayLimit).map(item => `
+        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')">
+            <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
+            <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+        </div>
+    `).join('');
+
+    if (matched.length > displayLimit) {
+        html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${matched.length - displayLimit} lagi.</div>`;
+    }
+
+    dropdown.innerHTML = html;
+}
+
 // Form Submission handler
 async function handleTransaction(event, type) {
     event.preventDefault();
@@ -283,22 +372,36 @@ function checkPin() {
     }
 }
 
-// Handler for adding new Master Item
-async function handleAddMasterItem(event) {
+// Handler for Unified Item Registration / Stok In
+async function handleUnifiedAdd(event) {
     event.preventDefault();
 
+    const isNewItem = document.getElementById('add-item-id').value === '';
+    const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
+
+    if (!itemIdInput) {
+        showToast('Sila isikan ID Barang (Item ID)', 'error');
+        return;
+    }
+
     const payload = {
-        Item_ID: document.getElementById('add-id').value.trim().toUpperCase(),
+        Item_ID: itemIdInput,
         Item_Name: document.getElementById('add-name').value.trim(),
-        Category: document.getElementById('add-category').value,
-        Unit: document.getElementById('add-unit').value,
-        Min_Stock: document.getElementById('add-min').value,
+        Quantity: document.getElementById('add-qty').value,
+        Remarks: document.getElementById('add-remarks').value,
+        Entered_By: document.getElementById('add-user').value,
         Admin_PIN: authorizedPin // Use the pin authorized from modal
     };
 
-    if (!payload.Category || !payload.Unit) {
-        showToast('Sila pilih Kategori dan Unit', 'error');
-        return;
+    if (isNewItem) {
+        payload.Category = document.getElementById('add-category').value;
+        payload.Unit = document.getElementById('add-unit').value;
+        payload.Min_Stock = document.getElementById('add-min').value;
+
+        if (!payload.Category || !payload.Unit) {
+            showToast('Sila pilih Kategori dan Unit untuk item baru.', 'error');
+            return;
+        }
     }
 
     document.getElementById('global-loader').style.display = 'flex';
@@ -306,7 +409,7 @@ async function handleAddMasterItem(event) {
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "addMasterItem", payload: payload })
+            body: JSON.stringify({ action: "unifiedAdd", payload: payload })
         });
 
         const data = await response.json();
@@ -314,6 +417,14 @@ async function handleAddMasterItem(event) {
         if (response.ok && data.status === 'success') {
             showToast(data.message);
             event.target.reset();
+
+            // Re-enable fields that might have been disabled
+            document.getElementById('add-name').readOnly = false;
+            document.getElementById('add-name').style.backgroundColor = 'white';
+            document.getElementById('new-item-fields').style.display = 'block';
+            document.getElementById('add-item-id').value = '';
+            document.getElementById('add-status').innerHTML = '';
+
             authorizedPin = ""; // Reset security pin on success
 
             // Refresh items so it appears in dropdowns immediately
@@ -323,7 +434,7 @@ async function handleAddMasterItem(event) {
                 switchTab('dashboard');
             }, 1500);
         } else {
-            showToast(data.message || 'Gagal mendaftar barang baru.', 'error');
+            showToast(data.message || 'Gagal menyimpan transaksi.', 'error');
         }
     } catch (e) {
         showToast('Ralat sambungan pelayan.', 'error');
