@@ -242,6 +242,53 @@ async function handleTransaction(event, type) {
     }
 }
 
+// Handler for adding new Master Item
+async function handleAddMasterItem(event) {
+    event.preventDefault();
+
+    const payload = {
+        Item_ID: document.getElementById('add-id').value.trim().toUpperCase(),
+        Item_Name: document.getElementById('add-name').value.trim(),
+        Category: document.getElementById('add-category').value,
+        Unit: document.getElementById('add-unit').value,
+        Min_Stock: document.getElementById('add-min').value
+    };
+
+    if (!payload.Category || !payload.Unit) {
+        showToast('Sila pilih Kategori dan Unit', 'error');
+        return;
+    }
+
+    document.getElementById('global-loader').style.display = 'flex';
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "addMasterItem", payload: payload })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+            showToast(data.message);
+            event.target.reset();
+
+            // Refresh items so it appears in dropdowns immediately
+            await fetchItems();
+
+            setTimeout(() => {
+                switchTab('dashboard');
+            }, 1500);
+        } else {
+            showToast(data.message || 'Gagal mendaftar barang baru.', 'error');
+        }
+    } catch (e) {
+        showToast('Ralat sambungan pelayan.', 'error');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+}
+
 // Toast UI utility
 function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');
