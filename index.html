@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDT storinven</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="loader-overlay" id="global-loader">
+        <div class="spinner"></div>
+    </div>
+
+    <header>
+        <div class="brand">BDT storinven</div>
+        <div class="user-info">🏠 Storekeeper</div>
+    </header>
+
+    <div class="container">
+        <!-- Application Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('stock_in')">📥 Stock In</button>
+            <button class="tab-btn" onclick="switchTab('stock_out')">📤 Stock Out</button>
+            <button class="tab-btn" onclick="switchTab('return')">🔄 Return</button>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="view-section active">
+            <h2 class="section-title">Overview</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Items Managed</div>
+                    <div class="stat-value" id="stat-total-items">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-title">Low Stock Alerts</div>
+                    <div class="stat-value" id="stat-low-stock">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--success-color);">
+                    <div class="stat-title">Total Logs</div>
+                    <div class="stat-value" id="stat-total-logs">0</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Low Stock Warning</h3>
+            <div class="table-responsive">
+                <table id="low-stock-table">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Name</th>
+                            <th>Current Stock</th>
+                            <th>Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Recent Transactions (Last 20)</h3>
+            <div class="table-responsive">
+                <table id="recent-trans-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Project</th>
+                            <th>By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stock In View -->
+        <div id="view-stock_in" class="view-section">
+            <h2 class="section-title">Receive New Stock</h2>
+            <form onsubmit="handleTransaction(event, 'STOCK_IN')">
+                <div class="form-group combo-box">
+                    <label>Search Item</label>
+                    <input type="text" id="in-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('in', this.value)" onfocus="showDropdown('in')">
+                    <input type="hidden" id="in-item-id" required>
+                    <input type="hidden" id="in-item-name">
+                    <div class="combo-list" id="in-dropdown"></div>
+                    <small id="in-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="in-qty" min="1" required placeholder="Enter quantity received">
+                </div>
+
+                <div class="form-group">
+                    <label>Remarks / Supplier (Optional)</label>
+                    <input type="text" id="in-remarks" placeholder="Delivery Order No. or Supplier Name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Entered By</label>
+                    <input type="text" id="in-user" required placeholder="Your Name" value="Storekeeper">
+                </div>
+
+                <button type="submit" class="btn-submit">Sahkan Kemasukan Barang (Stock In)</button>
+            </form>
+        </div>
+
+        <!-- Stock Out View -->
+        <div id="view-stock_out" class="view-section">
+            <h2 class="section-title">Release Stock to Project</h2>
+            <form onsubmit="handleTransaction(event, 'STOCK_OUT')">
+                <div class="form-group combo-box">
+                    <label>Search Item</label>
+                    <input type="text" id="out-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
+                    <input type="hidden" id="out-item-id" required>
+                    <input type="hidden" id="out-item-name">
+                    <div class="combo-list" id="out-dropdown"></div>
+                    <small id="out-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="out-qty" min="1" required placeholder="Enter quantity required">
+                </div>
+
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="out-project" required placeholder="Where is this item going?">
+                </div>
+                
+                <div class="form-group">
+                    <label>Entered By</label>
+                    <input type="text" id="out-user" required placeholder="Your Name" value="Storekeeper">
+                </div>
+
+                <button type="submit" class="btn-submit btn-danger">Hantar Barang (Stock Out)</button>
+            </form>
+        </div>
+
+        <!-- Return View -->
+        <div id="view-return" class="view-section">
+            <h2 class="section-title">Return Stock from Project</h2>
+            <form onsubmit="handleTransaction(event, 'RETURN')">
+                <div class="form-group combo-box">
+                    <label>Search Item</label>
+                    <input type="text" id="ret-search" placeholder="Type Item ID or Name..." autocomplete="off" oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
+                    <input type="hidden" id="ret-item-id" required>
+                    <input type="hidden" id="ret-item-name">
+                    <div class="combo-list" id="ret-dropdown"></div>
+                    <small id="ret-current-stock" style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantity Returned</label>
+                    <input type="number" id="ret-qty" min="1" required placeholder="Enter quantity returned">
+                </div>
+
+                <div class="form-group">
+                    <label>Returning Project / Remarks</label>
+                    <input type="text" id="ret-project" required placeholder="Which project is returning this?">
+                </div>
+                
+                <div class="form-group">
+                    <label>Entered By</label>
+                    <input type="text" id="ret-user" required placeholder="Your Name" value="Storekeeper">
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: #8e44ad;">Terima Pemulangan (Return)</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast">Message goes here</div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
