@@ -216,6 +216,7 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock) {
 
     // Hide new item specific fields
     document.getElementById('new-item-fields').style.display = 'none';
+    document.getElementById('new-item-threshold').style.display = 'none';
 
     // Update status UI
     document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${stock || 0} ${unit})`;
@@ -237,6 +238,7 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').readOnly = true;
         document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
         document.getElementById('new-item-fields').style.display = 'none';
+        document.getElementById('new-item-threshold').style.display = 'none';
         document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
         document.getElementById('add-status').style.color = 'var(--text-secondary)';
     } else {
@@ -245,6 +247,7 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').readOnly = false;
         document.getElementById('add-name').style.backgroundColor = 'white';
         document.getElementById('new-item-fields').style.display = 'block';
+        document.getElementById('new-item-threshold').style.display = 'block';
         if (q.length > 0) {
             document.getElementById('add-status').innerHTML = `Item Baru (Sila lengkapkan butiran di bawah)`;
             document.getElementById('add-status').style.color = 'var(--success-color)';
@@ -451,6 +454,7 @@ async function handleUnifiedAdd(event) {
             document.getElementById('add-name').readOnly = false;
             document.getElementById('add-name').style.backgroundColor = 'white';
             document.getElementById('new-item-fields').style.display = 'block';
+            document.getElementById('new-item-threshold').style.display = 'block';
             document.getElementById('add-item-id').value = '';
             document.getElementById('add-status').innerHTML = '';
 
