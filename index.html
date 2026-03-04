@@ -34,6 +34,9 @@
             <div class="modal-actions">
                 <button class="btn-submit" id="btn-login" style="width: 100%; margin-top: 0; display:none;"
                     onclick="submitLogin()">Log Masuk</button>
+                <button class="btn-submit" id="btn-create-pin"
+                    style="width: 100%; margin-top: 0; display:none; background-color: #f39c12;"
+                    onclick="openCreatePinModal()">Cipta PIN Pertama Kali</button>
             </div>
         </div>
     </div>
@@ -43,9 +46,14 @@
     </div>
 
     <div class="container">
-        <header>
-            <img src="./static/img/logo.png" alt="BigDATA storinven Logo" class="app-logo">
-            <div class="user-info" style="margin-top: 5px;">Sistem Pengurusan Stor</div>
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="./static/img/logo.png" alt="BigDATA storinven Logo" class="app-logo"
+                    style="margin-bottom: 0;">
+                <div class="user-info">Sistem Pengurusan Stor</div>
+            </div>
+            <button class="btn-cancel" onclick="logout()"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-top: 0; cursor: pointer;">Log Keluar</button>
         </header>
 
         <!-- Application Tabs -->

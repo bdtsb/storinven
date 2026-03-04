@@ -10,6 +10,33 @@ let currentUser = "";
 let currentUserPin = "";
 let isAdmin = false;
 
+function logout() {
+    currentUser = "";
+    currentUserPin = "";
+    isAdmin = false;
+
+    // Hide App, Show Login
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('global-login-modal').style.display = 'flex';
+
+    // Reset login inputs
+    document.getElementById('login-pin').value = '';
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pin-group').style.display = 'none';
+    document.getElementById('btn-login').style.display = 'none';
+    document.getElementById('btn-create-pin').style.display = 'none';
+
+    // Hide admin tab
+    document.getElementById('btn-tab-admin').style.display = 'none';
+
+    // Reset transaction forms
+    document.querySelectorAll('form').forEach(f => f.reset());
+
+    // Switch to dashboard view for the next user
+    switchTab('dashboard');
+    showToast('Berjaya Log Keluar', 'success');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.container').style.display = 'none'; // Hide main UI initially
     document.getElementById('global-login-modal').style.display = 'flex'; // Show Login Modal
@@ -410,18 +437,23 @@ function handleLoginUserSelect() {
     if (staffObj && !staffObj.Has_PIN) {
         document.getElementById('login-pin-group').style.display = 'none';
         document.getElementById('btn-login').style.display = 'none';
-
-        pendingTransactionPayload = { Entered_By: selectedUser, is_login_auth: true };
-        document.getElementById('staff-set-pin-modal').style.display = 'flex';
-        document.getElementById('staff-new-pin').value = '';
-        document.getElementById('staff-confirm-pin').value = '';
-        setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
+        document.getElementById('btn-create-pin').style.display = 'block';
     } else {
+        document.getElementById('btn-create-pin').style.display = 'none';
         document.getElementById('login-pin-group').style.display = 'block';
         document.getElementById('btn-login').style.display = 'block';
         document.getElementById('login-pin').value = '';
         document.getElementById('login-pin').focus();
     }
+}
+
+function openCreatePinModal() {
+    const selectedUser = document.getElementById('login-user').value;
+    pendingTransactionPayload = { Entered_By: selectedUser, is_login_auth: true };
+    document.getElementById('staff-set-pin-modal').style.display = 'flex';
+    document.getElementById('staff-new-pin').value = '';
+    document.getElementById('staff-confirm-pin').value = '';
+    setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
 }
 
 async function submitLogin() {
@@ -486,6 +518,7 @@ function closeStaffModal(type) {
         document.getElementById('login-user').value = '';
         document.getElementById('login-pin-group').style.display = 'none';
         document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('btn-create-pin').style.display = 'none';
     }
     pendingTransactionPayload = null;
 }
@@ -515,6 +548,7 @@ async function submitSetStaffPin() {
             document.getElementById('staff-set-pin-modal').style.display = 'none';
 
             if (pendingTransactionPayload.is_login_auth) {
+                document.getElementById('btn-create-pin').style.display = 'none';
                 document.getElementById('login-pin').value = pin1;
                 document.getElementById('login-pin-group').style.display = 'block';
                 document.getElementById('btn-login').style.display = 'block';
