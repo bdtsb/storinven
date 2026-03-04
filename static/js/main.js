@@ -49,11 +49,8 @@ async function fetchItems() {
             const lowStockItems = masterItems.filter(item => {
                 const current = parseInt(item.Current_Stock || 0);
                 const min = parseInt(item.Min_Stock || 0);
-                return current < min;
+                return current <= min; // Trigger warning when stock hits or falls below threshold
             });
-
-            document.getElementById('stat-low-stock').textContent = lowStockItems.length;
-            renderLowStockTable(lowStockItems);
 
             document.getElementById('stat-low-stock').textContent = lowStockItems.length;
             renderLowStockTable(lowStockItems);
