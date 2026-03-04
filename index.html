@@ -285,16 +285,15 @@
     <div class="modal-overlay" id="admin-auth-modal">
         <div class="modal-content">
             <h3 class="modal-title">Pengesahan Admin</h3>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Sila sahkan identiti admin untuk mewarisi
-                Master List.</p>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Sila sahkan identiti untuk mengakses admin
+                access.</p>
             <div class="form-group">
-                <select id="admin-auth-user" style="margin-bottom: 5px;"
-                    onchange="document.getElementById('admin-auth-pin').focus()">
-                    <option value="" disabled selected>Pilih Nama Admin...</option>
+                <select id="admin-auth-user" style="margin-bottom: 5px;" onchange="handleAdminUserSelect()">
+                    <option value="" disabled selected>Senarai Ahli</option>
                 </select>
             </div>
             <div class="form-group">
-                <input type="password" id="admin-auth-pin" maxlength="4" placeholder="PIN Keselamatan"
+                <input type="password" id="admin-auth-pin" maxlength="4" placeholder="****"
                     style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
                     onkeypress="if(event.key === 'Enter') checkAdminAuth()">
             </div>

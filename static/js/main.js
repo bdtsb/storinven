@@ -56,7 +56,7 @@ async function fetchStaff() {
 }
 
 function populateStaffDropdowns() {
-    const options = `<option value="" disabled selected>Pilih Staff...</option>` +
+    const options = `<option value="" disabled selected>Senarai Ahli</option>` +
         staffList.map(s => `<option value="${s.Staff_Name}">${s.Staff_Name}</option>`).join('');
 
     if (document.getElementById('out-user')) document.getElementById('out-user').innerHTML = options;
@@ -441,6 +441,11 @@ async function executePendingTransaction() {
 function closeStaffModal(type) {
     if (type === 'set') document.getElementById('staff-set-pin-modal').style.display = 'none';
     if (type === 'verify') document.getElementById('staff-verify-pin-modal').style.display = 'none';
+
+    if (pendingTransactionPayload && pendingTransactionPayload.is_admin_auth) {
+        document.getElementById('admin-auth-modal').style.display = 'flex';
+        document.getElementById('admin-auth-user').value = '';
+    }
     pendingTransactionPayload = null;
 }
 
@@ -468,9 +473,15 @@ async function submitSetStaffPin() {
             showToast('Selesai! PIN anda telah disimpan.', 'success');
             document.getElementById('staff-set-pin-modal').style.display = 'none';
 
-            // Resume requested transaction
-            pendingTransactionPayload.Staff_PIN = pin1;
-            executePendingTransaction();
+            if (pendingTransactionPayload.is_admin_auth) {
+                document.getElementById('admin-auth-modal').style.display = 'flex';
+                document.getElementById('admin-auth-pin').value = pin1;
+                checkAdminAuth();
+            } else {
+                // Resume requested transaction
+                pendingTransactionPayload.Staff_PIN = pin1;
+                executePendingTransaction();
+            }
         } else {
             showToast(data.message, 'error');
             document.getElementById('global-loader').style.display = 'none';
@@ -501,11 +512,33 @@ function closeAdminAuthModal() {
     document.getElementById('admin-auth-modal').style.display = 'none';
 }
 
+function handleAdminUserSelect() {
+    const selectedUser = document.getElementById('admin-auth-user').value;
+    const staffObj = staffList.find(s => s.Staff_Name === selectedUser);
+
+    if (staffObj && !staffObj.Has_PIN) {
+        document.getElementById('admin-auth-modal').style.display = 'none';
+        pendingTransactionPayload = { Entered_By: selectedUser, is_admin_auth: true };
+        document.getElementById('staff-set-pin-modal').style.display = 'flex';
+        document.getElementById('staff-new-pin').value = '';
+        document.getElementById('staff-confirm-pin').value = '';
+        setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
+    } else {
+        document.getElementById('admin-auth-pin').focus();
+    }
+}
+
 async function checkAdminAuth() {
     const selectedUser = document.getElementById('admin-auth-user').value;
-    const pin = document.getElementById('admin-auth-pin').value;
 
     if (!selectedUser) return showToast('Sila pilih nama pengguna.', 'error');
+
+    const staffObj = staffList.find(s => s.Staff_Name === selectedUser);
+    if (staffObj && !staffObj.Has_PIN) {
+        return handleAdminUserSelect();
+    }
+
+    const pin = document.getElementById('admin-auth-pin').value;
     if (pin.length !== 4) return showToast('PIN mestilah 4 angka.', 'error');
 
     document.getElementById('global-loader').style.display = 'flex';
