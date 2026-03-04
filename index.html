@@ -46,14 +46,20 @@
     </div>
 
     <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+        <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 5px;">
                 <img src="./static/img/logo.png" alt="BigDATA storinven Logo" class="app-logo"
                     style="margin-bottom: 0;">
-                <div class="user-info">Sistem Pengurusan Stor</div>
+                <div class="user-info" style="margin-top: 0;">Sistem Pengurusan Stor</div>
             </div>
-            <button class="btn-cancel" onclick="logout()"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-top: 0; cursor: pointer;">Log Keluar</button>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div id="header-user-name" style="font-weight: 600; color: var(--primary-color); font-size: 0.9rem;">
+                </div>
+                <button class="btn-cancel" onclick="logout()"
+                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; border-radius: 20px;">
+                    <span>Keluar</span> 🚪
+                </button>
+            </div>
         </header>
 
         <!-- Application Tabs -->

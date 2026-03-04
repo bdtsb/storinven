@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
             if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
             if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+            if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
 
             if (isAdmin) {
                 document.getElementById('btn-tab-admin').style.display = 'inline-block';
@@ -542,6 +543,7 @@ async function submitLogin() {
             if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
             if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
             if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+            if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
 
             // Show admin tab if authorized
             if (isAdmin) {
