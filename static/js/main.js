@@ -2,15 +2,19 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCFY9S47tGGG450vY81ZjbyF2C6ZM8GPAKsVxftBWrbaZpONFuZ0FZDaLQyVfX2BIOsg/exec';
 
 let masterItems = [];
-let authorizedPin = ""; // Store pin for backend validation
-let adminName = ""; // Store admin username for additions
 let staffList = [];
-let pendingTransactionPayload = null;
+let pendingTransactionPayload = null; // Mostly used for SetPIN now
+
+// Global Auth State
+let currentUser = "";
+let currentUserPin = "";
+let isAdmin = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchItems();
-    fetchTransactions();
-    fetchStaff();
+    document.querySelector('.container').style.display = 'none'; // Hide main UI initially
+    document.getElementById('global-login-modal').style.display = 'flex'; // Show Login Modal
+
+    fetchStaff(); // Only fetch staff list initially
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
@@ -21,14 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function switchTab(viewId) {
-    // Reset any authorized PIN when navigating away
-    if (viewId !== 'add_item') {
-        authorizedPin = "";
-    }
-
     // Update nav buttons
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+
+    // Safety check - if event exists (triggered by click) use it, otherwise target the relevant button manually
+    if (window.event && window.event.target.classList.contains('tab-btn')) {
+        window.event.target.classList.add('active');
+    }
 
     // Update views
     document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
@@ -38,7 +41,15 @@ function switchTab(viewId) {
     if (viewId === 'dashboard') {
         fetchTransactions();
         fetchItems();
-        fetchStaff();
+        // Background sync staff updates without loaders disrupting UI
+        fetch(`${SCRIPT_URL}?action=getStaff`)
+            .then(r => r.json())
+            .then(d => { if (d.status === 'success') staffList = d.data; })
+            .catch(() => { });
+    }
+
+    if (viewId === 'admin') {
+        renderAdminList();
     }
 }
 
@@ -59,10 +70,7 @@ function populateStaffDropdowns() {
     const options = `<option value="" disabled selected>Senarai Ahli</option>` +
         staffList.map(s => `<option value="${s.Staff_Name}">${s.Staff_Name}</option>`).join('');
 
-    if (document.getElementById('out-user')) document.getElementById('out-user').innerHTML = options;
-    if (document.getElementById('ret-user')) document.getElementById('ret-user').innerHTML = options;
-    if (document.getElementById('add-user')) document.getElementById('add-user').innerHTML = options;
-    if (document.getElementById('admin-auth-user')) document.getElementById('admin-auth-user').innerHTML = options;
+    if (document.getElementById('login-user')) document.getElementById('login-user').innerHTML = options;
 }
 
 async function fetchItems() {
@@ -340,91 +348,49 @@ async function handleTransaction(event, type) {
     if (type === 'RETURN') prefix = 'ret';
 
     const itemId = document.getElementById(`${prefix}-item-id`).value;
-    if (!itemId) {
-        showToast('Sila pilih item dari senarai terlebih dahulu!', 'error');
-        return;
-    }
+    if (!itemId) return showToast('Sila pilih item dari senarai terlebih dahulu!', 'error');
 
     const payload = {
         Type: type,
         Item_ID: itemId,
         Item_Name: document.getElementById(`${prefix}-item-name`).value,
         Quantity: document.getElementById(`${prefix}-qty`).value,
-        Entered_By: document.getElementById(`${prefix}-user`).value,
+        Entered_By: currentUser,
+        Staff_PIN: currentUserPin
     };
 
     if (type === 'STOCK_IN') {
         payload.Remarks = document.getElementById('in-remarks').value;
     } else if (type === 'STOCK_OUT') {
         payload.Project = document.getElementById('out-project').value;
-        // Check for negative stock safety visually, though backend verifies too
         const qty = parseInt(payload.Quantity);
         const maxStock = parseInt(document.getElementById('out-qty').max || 0);
-        if (qty > maxStock) {
-            showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
-            return;
-        }
+        if (qty > maxStock) return showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
     } else if (type === 'RETURN') {
         payload.Project = document.getElementById('ret-project').value;
     }
 
     document.getElementById('global-loader').style.display = 'flex';
 
-    const staffName = payload.Entered_By;
-    if (!staffName) {
-        document.getElementById('global-loader').style.display = 'none';
-        return showToast('Sila pilih nama Staff!', 'error');
-    }
-
-    const staffObj = staffList.find(s => s.Staff_Name === staffName);
-    if (!staffObj) {
-        document.getElementById('global-loader').style.display = 'none';
-        return showToast('Sila hubungi Admin untuk daftarkan nama anda dalam STAFF_LIST.', 'error');
-    }
-
-    pendingTransactionPayload = payload;
-    document.getElementById('global-loader').style.display = 'none';
-
-    if (!staffObj.Has_PIN) {
-        document.getElementById('staff-set-pin-modal').style.display = 'flex';
-        document.getElementById('staff-new-pin').value = '';
-        document.getElementById('staff-confirm-pin').value = '';
-        setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
-    } else {
-        document.getElementById('staff-verify-pin-modal').style.display = 'flex';
-        document.getElementById('staff-verify-pin').value = '';
-        setTimeout(() => document.getElementById('staff-verify-pin').focus(), 100);
-    }
-}
-
-async function executePendingTransaction() {
-    if (!pendingTransactionPayload) return;
-    document.getElementById('global-loader').style.display = 'flex';
-
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "addTransaction", payload: pendingTransactionPayload })
+            body: JSON.stringify({ action: "addTransaction", payload: payload })
         });
 
         const data = await response.json();
         if (response.ok && data.status === 'success') {
             showToast(`Transaksi berjaya disimpan! Baki terkini: ${data.new_stock}`);
 
-            let prefix = pendingTransactionPayload.Type === 'STOCK_OUT' ? 'out' : 'ret';
             document.getElementById(`${prefix}-item-id`).value = '';
             document.getElementById(`${prefix}-item-name`).value = '';
             document.getElementById(`${prefix}-search`).value = '';
             document.getElementById(`${prefix}-qty`).value = '';
-            document.getElementById(`${prefix}-project`).value = '';
-            document.getElementById(`${prefix}-user`).value = '';
+            if (document.getElementById(`${prefix}-project`)) document.getElementById(`${prefix}-project`).value = '';
             document.getElementById(`${prefix}-current-stock`).innerHTML = '';
 
             await fetchItems();
-
-            setTimeout(() => {
-                switchTab('dashboard');
-            }, 1500);
+            setTimeout(() => switchTab('dashboard'), 1500);
 
         } else {
             showErrorModal(data.message || 'Terdapat ralat semasa menyimpan.');
@@ -433,18 +399,93 @@ async function executePendingTransaction() {
         showErrorModal('Ralat sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
-        pendingTransactionPayload = null;
+    }
+}
+
+// Global Login Logic
+function handleLoginUserSelect() {
+    const selectedUser = document.getElementById('login-user').value;
+    const staffObj = staffList.find(s => s.Staff_Name === selectedUser);
+
+    if (staffObj && !staffObj.Has_PIN) {
+        document.getElementById('login-pin-group').style.display = 'none';
+        document.getElementById('btn-login').style.display = 'none';
+
+        pendingTransactionPayload = { Entered_By: selectedUser, is_login_auth: true };
+        document.getElementById('staff-set-pin-modal').style.display = 'flex';
+        document.getElementById('staff-new-pin').value = '';
+        document.getElementById('staff-confirm-pin').value = '';
+        setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
+    } else {
+        document.getElementById('login-pin-group').style.display = 'block';
+        document.getElementById('btn-login').style.display = 'block';
+        document.getElementById('login-pin').value = '';
+        document.getElementById('login-pin').focus();
+    }
+}
+
+async function submitLogin() {
+    const selectedUser = document.getElementById('login-user').value;
+    const pin = document.getElementById('login-pin').value;
+
+    if (!selectedUser) return showToast('Sila pilih nama pengguna.', 'error');
+    if (pin.length !== 4) return showToast('PIN mestilah 4 angka.', 'error');
+
+    document.getElementById('global-loader').style.display = 'flex';
+
+    try {
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "verifyLogin",
+                payload: { Staff_Name: selectedUser, PIN: pin }
+            })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            currentUser = selectedUser;
+            currentUserPin = pin;
+            isAdmin = data.is_admin === true;
+
+            // Populate globally linked user fields
+            if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
+            if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
+            if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+
+            // Show admin tab if authorized
+            if (isAdmin) {
+                document.getElementById('btn-tab-admin').style.display = 'inline-block';
+            }
+
+            document.getElementById('global-login-modal').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+
+            // Fetch initial data payload smoothly
+            fetchTransactions();
+            fetchItems();
+
+            showToast(`Selamat datang, ${currentUser}!`, 'success');
+        } else {
+            showToast(data.message || 'PIN Keselamatan Salah.', 'error');
+            document.getElementById('login-pin').value = '';
+            document.getElementById('login-pin').focus();
+        }
+    } catch (e) {
+        showToast('Ralat sambungan pelayan.', 'error');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
     }
 }
 
 // Staff Modal Logic
 function closeStaffModal(type) {
     if (type === 'set') document.getElementById('staff-set-pin-modal').style.display = 'none';
-    if (type === 'verify') document.getElementById('staff-verify-pin-modal').style.display = 'none';
 
-    if (pendingTransactionPayload && pendingTransactionPayload.is_admin_auth) {
-        document.getElementById('admin-auth-modal').style.display = 'flex';
-        document.getElementById('admin-auth-user').value = '';
+    if (pendingTransactionPayload && pendingTransactionPayload.is_login_auth) {
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pin-group').style.display = 'none';
+        document.getElementById('btn-login').style.display = 'none';
     }
     pendingTransactionPayload = null;
 }
@@ -473,14 +514,11 @@ async function submitSetStaffPin() {
             showToast('Selesai! PIN anda telah disimpan.', 'success');
             document.getElementById('staff-set-pin-modal').style.display = 'none';
 
-            if (pendingTransactionPayload.is_admin_auth) {
-                document.getElementById('admin-auth-modal').style.display = 'flex';
-                document.getElementById('admin-auth-pin').value = pin1;
-                checkAdminAuth();
-            } else {
-                // Resume requested transaction
-                pendingTransactionPayload.Staff_PIN = pin1;
-                executePendingTransaction();
+            if (pendingTransactionPayload.is_login_auth) {
+                document.getElementById('login-pin').value = pin1;
+                document.getElementById('login-pin-group').style.display = 'block';
+                document.getElementById('btn-login').style.display = 'block';
+                submitLogin();
             }
         } else {
             showToast(data.message, 'error');
@@ -488,93 +526,6 @@ async function submitSetStaffPin() {
         }
     } catch (e) {
         showToast('Ralat sambungan.', 'error');
-        document.getElementById('global-loader').style.display = 'none';
-    }
-}
-
-function submitVerifyStaffPin() {
-    const pin = document.getElementById('staff-verify-pin').value;
-    if (pin.length !== 4) return showToast('Sila masukkan 4-digit PIN.', 'error');
-
-    document.getElementById('staff-verify-pin-modal').style.display = 'none';
-    pendingTransactionPayload.Staff_PIN = pin;
-    executePendingTransaction();
-}
-
-// --- Admin / Master List Logic ---
-function promptAdminAuth() {
-    document.getElementById('admin-auth-modal').style.display = 'flex';
-    document.getElementById('admin-auth-user').value = '';
-    document.getElementById('admin-auth-pin').value = '';
-}
-
-function closeAdminAuthModal() {
-    document.getElementById('admin-auth-modal').style.display = 'none';
-}
-
-function handleAdminUserSelect() {
-    const selectedUser = document.getElementById('admin-auth-user').value;
-    const staffObj = staffList.find(s => s.Staff_Name === selectedUser);
-
-    if (staffObj && !staffObj.Has_PIN) {
-        document.getElementById('admin-auth-modal').style.display = 'none';
-        pendingTransactionPayload = { Entered_By: selectedUser, is_admin_auth: true };
-        document.getElementById('staff-set-pin-modal').style.display = 'flex';
-        document.getElementById('staff-new-pin').value = '';
-        document.getElementById('staff-confirm-pin').value = '';
-        setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
-    } else {
-        document.getElementById('admin-auth-pin').focus();
-    }
-}
-
-async function checkAdminAuth() {
-    const selectedUser = document.getElementById('admin-auth-user').value;
-
-    if (!selectedUser) return showToast('Sila pilih nama pengguna.', 'error');
-
-    const staffObj = staffList.find(s => s.Staff_Name === selectedUser);
-    if (staffObj && !staffObj.Has_PIN) {
-        return handleAdminUserSelect();
-    }
-
-    const pin = document.getElementById('admin-auth-pin').value;
-    if (pin.length !== 4) return showToast('PIN mestilah 4 angka.', 'error');
-
-    document.getElementById('global-loader').style.display = 'flex';
-
-    try {
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: "verifyAdmin",
-                payload: { Staff_Name: selectedUser, PIN: pin }
-            })
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-            adminName = selectedUser;
-            authorizedPin = pin;
-            closeAdminAuthModal();
-
-            // Set tab states
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-tab-admin').classList.add('active');
-
-            // Show admin view
-            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
-            document.getElementById('view-admin').classList.add('active');
-
-            renderAdminList();
-            showToast('Akses Master List Dibuka', 'success');
-        } else {
-            showToast(data.message || 'Sila semak semula PIN.', 'error');
-            document.getElementById('admin-auth-pin').value = '';
-            document.getElementById('admin-auth-pin').focus();
-        }
-    } catch (e) {
-        showToast('Ralat sambungan pelayan.', 'error');
-    } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
 }
@@ -623,8 +574,8 @@ async function handleUnifiedAdd(event) {
         Item_Name: document.getElementById('add-name').value.trim(),
         Quantity: document.getElementById('add-qty').value,
         Remarks: document.getElementById('add-remarks').value,
-        Entered_By: adminName,
-        Staff_PIN: authorizedPin
+        Entered_By: currentUser,
+        Staff_PIN: currentUserPin
     };
 
     if (isNewItem) {
@@ -659,8 +610,6 @@ async function handleUnifiedAdd(event) {
             document.getElementById('new-item-threshold').style.display = 'block';
             document.getElementById('add-item-id').value = '';
             document.getElementById('add-status').innerHTML = '';
-
-            authorizedPin = ""; // Reset security pin on success
 
             // Refresh items so it appears in dropdowns immediately
             await fetchItems();

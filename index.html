@@ -10,6 +10,34 @@
 </head>
 
 <body>
+    <!-- Global Login Overlay -->
+    <div class="modal-overlay" id="global-login-modal"
+        style="display: flex; background-color: var(--primary-color); z-index: 2000;">
+        <div class="modal-content" style="box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <img src="./static/img/logo.png" alt="Logo" style="max-height: 60px; margin-bottom: 10px;">
+                <h2 class="modal-title" style="color: var(--primary-color); font-size: 1.5rem; margin-bottom: 0;">Sistem
+                    Pengurusan Stor</h2>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Sila log masuk untuk berurusan.</p>
+            </div>
+
+            <div class="form-group">
+                <select id="login-user" style="margin-bottom: 10px;" onchange="handleLoginUserSelect()">
+                    <option value="" disabled selected>Loading Staff...</option>
+                </select>
+            </div>
+            <div class="form-group" id="login-pin-group" style="display:none;">
+                <input type="password" id="login-pin" maxlength="4" placeholder="****"
+                    style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
+                    onkeypress="if(event.key === 'Enter') submitLogin()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-submit" id="btn-login" style="width: 100%; margin-top: 0; display:none;"
+                    onclick="submitLogin()">Log Masuk</button>
+            </div>
+        </div>
+    </div>
+
     <div class="loader-overlay" id="global-loader">
         <div class="spinner"></div>
     </div>
@@ -25,7 +53,8 @@
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
             <button class="tab-btn" onclick="switchTab('stock_out')">📤 Stock Out</button>
             <button class="tab-btn" onclick="switchTab('return')">🔄 Return</button>
-            <button class="tab-btn" id="btn-tab-admin" onclick="promptAdminAuth()">⚙️ Admin Akses</button>
+            <button class="tab-btn" id="btn-tab-admin" onclick="switchTab('admin')" style="display:none;">⚙️ Admin
+                Akses</button>
         </div>
 
         <!-- Dashboard View -->
@@ -117,10 +146,8 @@
 
                 <div class="form-group">
                     <label>Entered By</label>
-                    <select id="out-user" required
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
-                        <option value="" disabled selected>Loading Staff...</option>
-                    </select>
+                    <input type="text" id="out-user" readonly required
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
 
                 <button type="submit" class="btn-submit btn-danger">Hantar Barang (Stock Out)</button>
@@ -154,10 +181,8 @@
 
                 <div class="form-group">
                     <label>Entered By</label>
-                    <select id="ret-user" required
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
-                        <option value="" disabled selected>Loading Staff...</option>
-                    </select>
+                    <input type="text" id="ret-user" readonly required
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
 
                 <button type="submit" class="btn-submit" style="background-color: #8e44ad;">Terima Pemulangan
@@ -265,10 +290,8 @@
 
                 <div class="form-group" id="add-user-block" style="display:none;">
                     <label>Didaftarkan Oleh</label>
-                    <select id="add-user" required
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
-                        <option value="Admin" selected>Admin</option>
-                    </select>
+                    <input type="text" id="add-user" readonly required
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -281,28 +304,6 @@
         </div>
     </div>
 
-    <!-- Admin Auth Modal -->
-    <div class="modal-overlay" id="admin-auth-modal">
-        <div class="modal-content">
-            <h3 class="modal-title">Pengesahan Admin</h3>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Sila sahkan identiti untuk mengakses admin
-                access.</p>
-            <div class="form-group">
-                <select id="admin-auth-user" style="margin-bottom: 5px;" onchange="handleAdminUserSelect()">
-                    <option value="" disabled selected>Senarai Ahli</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <input type="password" id="admin-auth-pin" maxlength="4" placeholder="****"
-                    style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
-                    onkeypress="if(event.key === 'Enter') checkAdminAuth()">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeAdminAuthModal()">Batal</button>
-                <button class="btn-submit" style="margin-top: 0;" onclick="checkAdminAuth()">Akses Master List</button>
-            </div>
-        </div>
-    </div>
     </div>
 
     <!-- Set Staff PIN Modal -->
@@ -328,23 +329,7 @@
         </div>
     </div>
 
-    <!-- Verify Staff PIN Modal -->
-    <div class="modal-overlay" id="staff-verify-pin-modal">
-        <div class="modal-content">
-            <h3 class="modal-title">Pengesahan Kakitangan</h3>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Sila masukkan 4-digit PIN keselamatan anda.
-            </p>
-            <div class="form-group">
-                <input type="password" id="staff-verify-pin" maxlength="4" placeholder="****"
-                    style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
-                    onkeypress="if(event.key === 'Enter') submitVerifyStaffPin()">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeStaffModal('verify')">Batal</button>
-                <button class="btn-submit" style="margin-top: 0;" onclick="submitVerifyStaffPin()">Sahkan</button>
-            </div>
-        </div>
-    </div>
+    <!-- Placeholder for deleted verify modal -->
 
     <!-- Error Alert Modal -->
     <div class="modal-overlay" id="error-alert-modal">
