@@ -48,7 +48,7 @@
             </div>
 
             <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Low
-                Stock Warning</h3>
+                Stock Alerts (Barang Hampir Habis)</h3>
             <div class="table-responsive">
                 <table id="low-stock-table">
                     <thead>
@@ -56,7 +56,7 @@
                             <th>Item ID</th>
                             <th>Name</th>
                             <th>Current Stock</th>
-                            <th>Threshold</th>
+                            <th>Low Stock Alerts</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -219,8 +219,8 @@
                 <!-- Hidden by JS if item already exists -->
                 <div id="new-item-threshold">
                     <div class="form-group">
-                        <label>Stok Amaran (Minimum Threshold)</label>
-                        <input type="number" id="add-min" min="0" placeholder="Amaran stok rendah (Low stock alert)">
+                        <label>Low Stock Alerts (Amaran Stok)</label>
+                        <input type="number" id="add-min" min="0" placeholder="Kuantiti untuk cetus amaran (eg: 2)">
                     </div>
                 </div>
 
