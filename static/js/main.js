@@ -30,6 +30,7 @@ function logout() {
     document.getElementById('btn-tab-admin').style.display = 'none';
     if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = '';
     if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'none';
+    if (document.getElementById('header-logout-btn')) document.getElementById('header-logout-btn').style.display = 'none';
 
     // Clear localStorage values
     localStorage.removeItem('bdt_login_user');
