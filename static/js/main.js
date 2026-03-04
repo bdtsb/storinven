@@ -179,6 +179,26 @@ function filterDropdown(prefix, query) {
 }
 
 // --- Unified Add/Receive Item Dropdown Logic ---
+function generateNextId() {
+    if (!masterItems || masterItems.length === 0) return "ITM001";
+    let maxNum = 0;
+    masterItems.forEach(item => {
+        const match = String(item.Item_ID).match(/\d+/);
+        if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+        }
+    });
+    const nextNum = maxNum + 1;
+    return "ITM" + nextNum.toString().padStart(3, '0');
+}
+
+function setSearchToNextId(nextId) {
+    document.getElementById('add-search').value = nextId;
+    document.getElementById('add-dropdown').classList.remove('active');
+    filterUnifiedDropdown(nextId);
+}
+
 function showUnifiedDropdown() {
     document.getElementById(`add-dropdown`).classList.add('active');
     filterUnifiedDropdown(document.getElementById(`add-search`).value);
@@ -238,17 +258,26 @@ function filterUnifiedDropdown(query) {
         String(item.Item_Name).toLowerCase().includes(q)
     );
 
+    let html = "";
+
+    // Auto-ID generator button when starting to type
+    if (q.length === 0) {
+        const nextId = generateNextId();
+        html += `<div class="combo-item" style="color: var(--primary-color); font-weight:bold; cursor:pointer; background-color: #f0f4fc; border-bottom: 2px solid var(--border-color);" onclick="setSearchToNextId('${nextId}')">
+            ✨ [KLIK DI SINI] JANA ID AUTOMATIK JIKA BARANG BARU (Auto-ID: ${nextId})
+        </div>`;
+    }
+
     if (matched.length === 0) {
         if (q.length > 0) {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Daftar Item Baru</div>';
-        } else {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item. Taip untuk mencari atau daftar baru.</div>';
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Mendaftar ID Baru: ${q.toUpperCase()}</div>`;
         }
+        dropdown.innerHTML = html;
         return;
     }
 
     const displayLimit = 50;
-    let html = matched.slice(0, displayLimit).map(item => `
+    html += matched.slice(0, displayLimit).map(item => `
         <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
