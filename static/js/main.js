@@ -29,15 +29,69 @@ function logout() {
     // Hide admin tab
     document.getElementById('btn-tab-admin').style.display = 'none';
 
+    // Clear localStorage values
+    localStorage.removeItem('bdt_login_user');
+    localStorage.removeItem('bdt_login_pin');
+    localStorage.removeItem('bdt_login_admin');
+    localStorage.removeItem('bdt_login_time');
+
     // Reset transaction forms
     document.querySelectorAll('form').forEach(f => f.reset());
 
     // Switch to dashboard view for the next user
     switchTab('dashboard');
     showToast('Berjaya Log Keluar', 'success');
+
+    // Give time to read toast before page refresh or redirect. Just showing it is enough.
 }
 
+let sessionTimer;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Check local storage for active session
+    const savedUser = localStorage.getItem('bdt_login_user');
+    const savedPin = localStorage.getItem('bdt_login_pin');
+    const savedAdmin = localStorage.getItem('bdt_login_admin') === 'true';
+    const savedTime = localStorage.getItem('bdt_login_time');
+
+    if (savedUser && savedPin && savedTime) {
+        const elapsedHrs = (Date.now() - parseInt(savedTime)) / (1000 * 60 * 60);
+        if (elapsedHrs < 1) {
+            // Restore Session
+            currentUser = savedUser;
+            currentUserPin = savedPin;
+            isAdmin = savedAdmin;
+
+            if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
+            if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
+            if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+
+            if (isAdmin) {
+                document.getElementById('btn-tab-admin').style.display = 'inline-block';
+            }
+
+            document.getElementById('global-login-modal').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+
+            fetchTransactions();
+            fetchItems();
+
+            // Auto logout after remaining time
+            const remainingTime = (1 * 60 * 60 * 1000) - (Date.now() - parseInt(savedTime));
+            sessionTimer = setTimeout(() => {
+                showToast('Sesi tamat. Sila log masuk semula.', 'error');
+                logout();
+            }, remainingTime);
+
+            fetchStaff(); // Refresh staff quietly
+            return;
+        } else {
+            // Session expired
+            localStorage.clear();
+        }
+    }
+
+    // No active session -> show login
     document.querySelector('.container').style.display = 'none'; // Hide main UI initially
     document.getElementById('global-login-modal').style.display = 'flex'; // Show Login Modal
 
@@ -450,7 +504,11 @@ function handleLoginUserSelect() {
 function openCreatePinModal() {
     const selectedUser = document.getElementById('login-user').value;
     pendingTransactionPayload = { Entered_By: selectedUser, is_login_auth: true };
-    document.getElementById('staff-set-pin-modal').style.display = 'flex';
+
+    const staffSetPinModal = document.getElementById('staff-set-pin-modal');
+    staffSetPinModal.style.zIndex = '2001'; // Ensure it renders above global login (z-index: 2000)
+    staffSetPinModal.style.display = 'flex';
+
     document.getElementById('staff-new-pin').value = '';
     document.getElementById('staff-confirm-pin').value = '';
     setTimeout(() => document.getElementById('staff-new-pin').focus(), 100);
@@ -489,6 +547,19 @@ async function submitLogin() {
             if (isAdmin) {
                 document.getElementById('btn-tab-admin').style.display = 'inline-block';
             }
+
+            // Save to localStorage
+            localStorage.setItem('bdt_login_user', currentUser);
+            localStorage.setItem('bdt_login_pin', currentUserPin);
+            localStorage.setItem('bdt_login_admin', isAdmin);
+            localStorage.setItem('bdt_login_time', Date.now());
+
+            // Set 1-hour auto logout timer
+            if (sessionTimer) clearTimeout(sessionTimer);
+            sessionTimer = setTimeout(() => {
+                showToast('Sesi tamat. Sila log masuk semula.', 'error');
+                logout();
+            }, 60 * 60 * 1000);
 
             document.getElementById('global-login-modal').style.display = 'none';
             document.querySelector('.container').style.display = 'block';
