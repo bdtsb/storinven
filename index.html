@@ -300,11 +300,12 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group combo-box">
                     <label>Catatan / Pembekal (Jika ada)</label>
-                    <input type="text" id="add-remarks" list="supplier-options"
-                        placeholder="Sila Pilih atau Taip Nama Pembekal">
-                    <datalist id="supplier-options"></datalist>
+                    <input type="text" id="add-remarks" placeholder="Sila Pilih atau Taip Nama Pembekal"
+                        autocomplete="off" oninput="filterSupplierDropdown(this.value)"
+                        onfocus="showSupplierDropdown()">
+                    <div class="combo-list" id="supplier-dropdown" style="max-height: 220px;"></div>
                 </div>
 
                 <div class="form-group" id="add-user-block" style="display:none;">

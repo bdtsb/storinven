@@ -175,16 +175,6 @@ async function fetchItems() {
             ['out', 'ret'].forEach(prefix => filterDropdown(prefix, ''));
             // And unified dropdown
             if (document.getElementById('add-search')) filterUnifiedDropdown('');
-
-            // Populate Supplier datalist
-            if (document.getElementById('supplier-options')) {
-                const uniqueSuppliers = [...new Set(masterItems
-                    .map(item => (item.Supplier || "").trim())
-                    .filter(sup => sup !== "" && sup !== "-")
-                )];
-                const datalistHtml = uniqueSuppliers.map(sup => `<option value="${sup}">`).join('');
-                document.getElementById('supplier-options').innerHTML = datalistHtml;
-            }
         }
     } catch (error) {
         showToast('Ralat memuatkan barang dari pangkalan data', 'error');
@@ -458,6 +448,47 @@ function filterUnifiedDropdown(query) {
     }
 
     dropdown.innerHTML = html;
+}
+
+// --- SUPPLIER DROPDOWN ---
+function showSupplierDropdown() {
+    document.querySelectorAll('.combo-list').forEach(el => el.classList.remove('active'));
+    document.getElementById('supplier-dropdown').classList.add('active');
+    filterSupplierDropdown(document.getElementById('add-remarks').value);
+}
+
+function filterSupplierDropdown(query) {
+    const q = query.toLowerCase().trim();
+    const dropdown = document.getElementById('supplier-dropdown');
+
+    const uniqueSuppliers = [...new Set(masterItems
+        .map(item => (item.Supplier || "").trim())
+        .filter(sup => sup !== "" && sup !== "-")
+    )].sort();
+
+    const filtered = uniqueSuppliers.filter(sup => sup.toLowerCase().includes(q));
+
+    let html = "";
+    if (filtered.length === 0) {
+        if (q.length > 0) {
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:default; background:white;">✨ Sentuh 'Sahkan Simpan Stok' untuk simpan pembekal baru ini.</div>`;
+        } else {
+            html += `<div class="combo-item" style="color: var(--text-secondary); cursor:default; background:white;">Senarai pembekal kosong.</div>`;
+        }
+    } else {
+        html += filtered.map(sup => `
+            <div class="combo-item" onclick="selectSupplier('${sup.replace(/'/g, "\\'")}')">
+                ${sup}
+            </div>
+        `).join('');
+    }
+
+    dropdown.innerHTML = html;
+}
+
+function selectSupplier(name) {
+    document.getElementById('add-remarks').value = name;
+    document.getElementById('supplier-dropdown').classList.remove('active');
 }
 
 // Form Submission handler
