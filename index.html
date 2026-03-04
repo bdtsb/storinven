@@ -23,7 +23,7 @@
 
             <div class="form-group">
                 <select id="login-user" style="margin-bottom: 10px;" onchange="handleLoginUserSelect()">
-                    <option value="" disabled selected>Loading Staff...</option>
+                    <option value="" disabled selected>Memuatkan Ahli...</option>
                 </select>
             </div>
             <div class="form-group" id="login-pin-group" style="display:none;">
@@ -59,60 +59,60 @@
 
         <!-- Dashboard View -->
         <div id="view-dashboard" class="view-section active">
-            <h2 class="section-title">Overview</h2>
+            <h2 class="section-title">Ringkasan</h2>
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-title">Total Items Managed</div>
+                    <div class="stat-title">Jumlah Item Diuruskan</div>
                     <div class="stat-value" id="stat-total-items">0</div>
                 </div>
                 <div class="stat-card warning">
-                    <div class="stat-title">Low Stock Alerts</div>
+                    <div class="stat-title">Amaran Stok Rendah</div>
                     <div class="stat-value" id="stat-low-stock">0</div>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--success-color);">
-                    <div class="stat-title">Total Logs</div>
+                    <div class="stat-title">Jumlah Rekod Transaksi</div>
                     <div class="stat-value" id="stat-total-logs">0</div>
                 </div>
             </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Low
-                Stock Alerts (Barang Hampir Habis)</h3>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Amaran
+                Stok Rendah (Barang Hampir Habis)</h3>
             <div class="table-responsive">
                 <table id="low-stock-table">
                     <thead>
                         <tr>
-                            <th>Item ID</th>
-                            <th>Name</th>
-                            <th>Current Stock</th>
-                            <th>Low Stock Alerts</th>
+                            <th>ID Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Stok Semasa</th>
+                            <th>Had Amaran Stok</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="4" style="text-align:center;">Loading...</td>
+                            <td colspan="4" style="text-align:center;">Memuatkan...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Recent
-                Transactions (Last 20)</h3>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">
+                Transaksi Terkini (20 Terakhir)</h3>
             <div class="table-responsive">
                 <table id="recent-trans-table">
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Type</th>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Project</th>
-                            <th>By</th>
+                            <th>Masa</th>
+                            <th>Jenis</th>
+                            <th>Barang</th>
+                            <th>Kuantiti</th>
+                            <th>Projek</th>
+                            <th>Oleh</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="6" style="text-align:center;">Loading...</td>
+                            <td colspan="6" style="text-align:center;">Memuatkan...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -121,11 +121,11 @@
 
         <!-- Stock Out View -->
         <div id="view-stock_out" class="view-section">
-            <h2 class="section-title">Release Stock to Project</h2>
+            <h2 class="section-title">Keluarkan Stok untuk Projek</h2>
             <form onsubmit="handleTransaction(event, 'STOCK_OUT')">
                 <div class="form-group combo-box">
-                    <label>Search Item</label>
-                    <input type="text" id="out-search" placeholder="Type Item ID or Name..." autocomplete="off"
+                    <label>Cari Barang</label>
+                    <input type="text" id="out-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
                         oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
                     <input type="hidden" id="out-item-id" required>
                     <input type="hidden" id="out-item-name">
@@ -135,17 +135,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="out-qty" min="1" required placeholder="Enter quantity required">
+                    <label>Kuantiti</label>
+                    <input type="number" id="out-qty" min="1" required placeholder="Masukkan kuantiti yang diperlukan">
                 </div>
 
                 <div class="form-group">
-                    <label>Project Name</label>
-                    <input type="text" id="out-project" required placeholder="Where is this item going?">
+                    <label>Nama Projek</label>
+                    <input type="text" id="out-project" required placeholder="Untuk kegunaan projek mana?">
                 </div>
 
                 <div class="form-group">
-                    <label>Entered By</label>
+                    <label>Didaftarkan Oleh</label>
                     <input type="text" id="out-user" readonly required
                         style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
@@ -156,11 +156,11 @@
 
         <!-- Return View -->
         <div id="view-return" class="view-section">
-            <h2 class="section-title">Return Stock from Project</h2>
+            <h2 class="section-title">Terima Pemulangan Stok dari Projek</h2>
             <form onsubmit="handleTransaction(event, 'RETURN')">
                 <div class="form-group combo-box">
-                    <label>Search Item</label>
-                    <input type="text" id="ret-search" placeholder="Type Item ID or Name..." autocomplete="off"
+                    <label>Cari Barang</label>
+                    <input type="text" id="ret-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
                         oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
                     <input type="hidden" id="ret-item-id" required>
                     <input type="hidden" id="ret-item-name">
@@ -170,17 +170,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Quantity Returned</label>
-                    <input type="number" id="ret-qty" min="1" required placeholder="Enter quantity returned">
+                    <label>Kuantiti Dipulangkan</label>
+                    <input type="number" id="ret-qty" min="1" required placeholder="Masukkan kuantiti yang dipulangkan">
                 </div>
 
                 <div class="form-group">
-                    <label>Returning Project / Remarks</label>
-                    <input type="text" id="ret-project" required placeholder="Which project is returning this?">
+                    <label>Projek Pemulangan / Catatan</label>
+                    <input type="text" id="ret-project" required placeholder="Dari projek mana pemulangan ini?">
                 </div>
 
                 <div class="form-group">
-                    <label>Entered By</label>
+                    <label>Didaftarkan Oleh</label>
                     <input type="text" id="ret-user" readonly required
                         style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
@@ -202,14 +202,14 @@
                 <table id="admin-master-table">
                     <thead>
                         <tr>
-                            <th>Item ID</th>
-                            <th>Item Name</th>
-                            <th>Stock</th>
+                            <th>ID Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Stok</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="3" style="text-align:center;">Loading...</td>
+                            <td colspan="3" style="text-align:center;">Memuatkan...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -233,7 +233,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Nama Barang (Item Name)</label>
+                    <label>Nama Barang</label>
                     <input type="text" id="add-name" required placeholder="Contoh: Mesin Gerudi Bosch"
                         autocomplete="off">
                 </div>
@@ -241,19 +241,19 @@
                 <!-- Hidden by JS if item already exists -->
                 <div id="new-item-fields">
                     <div class="form-group">
-                        <label>Kategori (Category)</label>
+                        <label>Kategori</label>
                         <select id="add-category"
                             style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
                             <option value="" disabled selected>Pilih Kategori...</option>
-                            <option value="Equipment">Equipment</option>
-                            <option value="Spare Part">Spare Part</option>
-                            <option value="Consumable">Consumable</option>
+                            <option value="Equipment">Peralatan (Equipment)</option>
+                            <option value="Spare Part">Alat Ganti (Spare Part)</option>
+                            <option value="Consumable">Bahan Habis Guna (Consumable)</option>
                             <option value="Lain-Lain">Lain-Lain</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Unit Ukuran (Unit)</label>
+                        <label>Unit Ukuran</label>
                         <select id="add-unit"
                             style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem;">
                             <option value="" disabled selected>Pilih Unit...</option>
@@ -271,21 +271,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Kuantiti (Stock In)</label>
+                    <label>Kuantiti Masuk (Stock In)</label>
                     <input type="number" id="add-qty" min="1" required placeholder="Sila masukkan kuantiti penerimaan">
                 </div>
 
                 <!-- Hidden by JS if item already exists -->
                 <div id="new-item-threshold">
                     <div class="form-group">
-                        <label>Low Stock Alerts (Amaran Stok)</label>
-                        <input type="number" id="add-min" min="0" placeholder="Kuantiti untuk cetus amaran (eg: 2)">
+                        <label>Had Amaran Stok Rendah</label>
+                        <input type="number" id="add-min" min="0" placeholder="Kuantiti minimum untuk amaran (cth: 2)">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Remarks / Supplier (Jika ada)</label>
-                    <input type="text" id="add-remarks" placeholder="Delivery Order No. / Supplier">
+                    <label>Catatan / Pembekal (Jika ada)</label>
+                    <input type="text" id="add-remarks" placeholder="No. D.O / Nama Pembekal">
                 </div>
 
                 <div class="form-group" id="add-user-block" style="display:none;">

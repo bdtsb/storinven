@@ -62,7 +62,7 @@ async function fetchStaff() {
             populateStaffDropdowns();
         }
     } catch (error) {
-        console.error("Error loading staff", error);
+        console.error("Ralat memuatkan nama ahli", error);
     }
 }
 
@@ -97,7 +97,7 @@ async function fetchItems() {
             if (document.getElementById('add-search')) filterUnifiedDropdown('');
         }
     } catch (error) {
-        showToast('Error loading items from database', 'error');
+        showToast('Ralat memuatkan barang dari pangkalan data', 'error');
     }
 }
 
@@ -111,7 +111,7 @@ async function fetchTransactions() {
             renderRecentTransactions(data.data.slice(0, 20));
         }
     } catch (error) {
-        showToast('Error loading recent transactions', 'error');
+        showToast('Ralat memuatkan rekod transaksi terkini', 'error');
     }
 }
 
@@ -584,7 +584,7 @@ async function handleUnifiedAdd(event) {
         payload.Min_Stock = document.getElementById('add-min').value;
 
         if (!payload.Category || !payload.Unit) {
-            showToast('Sila pilih Kategori dan Unit untuk item baru.', 'error');
+            showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
             return;
         }
     }
