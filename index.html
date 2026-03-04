@@ -46,18 +46,17 @@
     </div>
 
     <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <header style="display: flex; justify-content: space-between; align-items: flex-start; flex-direction: row;">
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 5px;">
-                <img src="./static/img/logo.png" alt="BigDATA storinven Logo" class="app-logo"
-                    style="margin-bottom: 0;">
+                <img src="./static/img/logo.png" alt="BigDATA storinven Logo" class="app-logo" style="margin: 0;">
                 <div class="user-info" style="margin-top: 0;">Sistem Pengurusan Stor</div>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                 <div id="header-user-name" style="font-weight: 600; color: var(--primary-color); font-size: 0.9rem;">
                 </div>
                 <button class="btn-cancel" onclick="logout()"
-                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; border-radius: 20px;">
-                    <span>Keluar</span> 🚪
+                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 20px;">
+                    Keluar
                 </button>
             </div>
         </header>
@@ -65,9 +64,9 @@
         <!-- Application Tabs -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('stock_out')">📤 Stock Out</button>
-            <button class="tab-btn" onclick="switchTab('return')">🔄 Return</button>
-            <button class="tab-btn" id="btn-tab-admin" onclick="switchTab('admin')" style="display:none;">⚙️ Admin
+            <button class="tab-btn" onclick="switchTab('stock_out')">Stock Out</button>
+            <button class="tab-btn" onclick="switchTab('return')">Return</button>
+            <button class="tab-btn" id="btn-tab-admin" onclick="switchTab('admin')" style="display:none;">Admin
                 Akses</button>
         </div>
 
@@ -229,7 +228,7 @@
                 </table>
             </div>
             <button type="button" class="btn-submit" onclick="switchTab('add_item')"
-                style="background-color: #27ae60; margin-top: 0;">➕ Tambah Barang / Stok Baru</button>
+                style="background-color: #27ae60; margin-top: 0;">Tambah Barang / Stok Baru</button>
         </div>
 
         <!-- Add Item / Stock In Unified View -->
