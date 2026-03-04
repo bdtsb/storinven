@@ -70,8 +70,8 @@ header {
 /* Tabs Navigation */
 .tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
   scrollbar-width: none;
@@ -84,14 +84,16 @@ header {
 .tab-btn {
   background-color: #fafbfc;
   border: 1px solid var(--border-color);
-  padding: 10px 14px;
+  padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.2s;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 11px;
+  flex: 1;
+  text-align: center;
 }
 
 .tab-btn:hover {
@@ -135,14 +137,14 @@ header {
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .stat-card {
   background: #f8fbff;
   border-left: 4px solid var(--primary-color);
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   border-radius: 4px var(--radius) var(--radius) 4px;
   display: flex;
   justify-content: space-between;
@@ -150,14 +152,14 @@ header {
 }
 
 .stat-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--primary-color);
   margin-top: 0;
