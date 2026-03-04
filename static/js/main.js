@@ -167,17 +167,9 @@ async function fetchItems() {
         const data = await response.json();
         if (data.status === 'success') {
             masterItems = data.data;
-            document.getElementById('stat-total-items').textContent = masterItems.length;
 
-            // Calculate low stock items
-            const lowStockItems = masterItems.filter(item => {
-                const current = parseInt(item.Current_Stock || 0);
-                const min = parseInt(item.Min_Stock || 0);
-                return current <= min; // Trigger warning when stock hits or falls below threshold
-            });
-
-            document.getElementById('stat-low-stock').textContent = lowStockItems.length;
-            renderLowStockTable(lowStockItems);
+            // Render active totals and low stock dashboard alerts
+            updateDashboard();
 
             // Re-render dropdowns just in case
             ['out', 'ret'].forEach(prefix => filterDropdown(prefix, ''));
