@@ -203,21 +203,38 @@ async function fetchTransactions() {
     }
 }
 
-function renderLowStockTable(items) {
-    const tbody = document.querySelector('#low-stock-table tbody');
-    if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Semua stok dalam keadaan baik!</td></tr>';
-        return;
-    }
+function updateDashboard() {
+    // Build Low Stock Table
+    const lowStockTbody = document.querySelector('#low-stock-table tbody');
+    lowStockTbody.innerHTML = '';
+    let lowStockCount = 0;
 
-    tbody.innerHTML = items.map(item => `
-        <tr>
-            <td><strong>${item.Item_ID}</strong></td>
-            <td>${item.Item_Name}</td>
-            <td style="color:var(--danger-color); font-weight:bold;">${item.Current_Stock || 0}</td>
-            <td><span class="badge badge-low">${item.Min_Stock}</span></td>
-        </tr>
-    `).join('');
+    let totalManagedItems = 0;
+
+    masterItems.forEach(item => {
+        if (item.Status !== 'Discontinued') {
+            totalManagedItems++;
+
+            if (parseInt(item.Current_Stock || 0) <= parseInt(item.Min_Stock || 0)) {
+                lowStockCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.Item_ID}</td>
+                    <td>${item.Item_Name}</td>
+                    <td><span class="stock-badge ${parseInt(item.Current_Stock || 0) === 0 ? 'badge-danger' : 'badge-warning'}">${item.Current_Stock || 0}</span></td>
+                    <td>${item.Min_Stock || 0}</td>
+                `;
+                lowStockTbody.appendChild(tr);
+            }
+        }
+    });
+
+    document.getElementById('stat-total-items').innerText = totalManagedItems;
+    document.getElementById('stat-low-stock').textContent = lowStockCount;
+
+    if (lowStockCount === 0) {
+        lowStockTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Semua stok dalam keadaan baik!</td></tr>';
+    }
 }
 
 function renderRecentTransactions(transactions) {
@@ -285,10 +302,12 @@ function filterDropdown(prefix, query) {
     const q = query.toLowerCase();
     const dropdown = document.getElementById(`${prefix}-dropdown`);
 
-    const matched = masterItems.filter(item =>
-        String(item.Item_ID).toLowerCase().includes(q) ||
-        String(item.Item_Name).toLowerCase().includes(q)
-    );
+    // Filter items based on query AND ensuring they are not Discontinued
+    const matched = masterItems.filter(item => {
+        if (item.Status === 'Discontinued') return false;
+        return String(item.Item_ID).toLowerCase().includes(q) ||
+            String(item.Item_Name).toLowerCase().includes(q);
+    });
 
     if (matched.length === 0) {
         dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item dijumpai</div>';
@@ -389,10 +408,11 @@ function filterUnifiedDropdown(query) {
         }
     }
 
-    const matched = masterItems.filter(item =>
-        String(item.Item_ID).toLowerCase().includes(q) ||
-        String(item.Item_Name).toLowerCase().includes(q)
-    );
+    // Filter items based on query AND ensuring they are not Discontinued
+    const filtered = masterItems.filter(item => {
+        if (item.Status === 'Discontinued') return false;
+        return item.Item_ID.toLowerCase().includes(q) || item.Item_Name.toLowerCase().includes(q);
+    });
 
     let html = "";
 
@@ -404,7 +424,7 @@ function filterUnifiedDropdown(query) {
         </div>`;
     }
 
-    if (matched.length === 0) {
+    if (filtered.length === 0) {
         if (q.length > 0) {
             html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Mendaftar ID Baru: ${q.toUpperCase()}</div>`;
         }
@@ -413,15 +433,15 @@ function filterUnifiedDropdown(query) {
     }
 
     const displayLimit = 50;
-    html += matched.slice(0, displayLimit).map(item => `
+    html += filtered.slice(0, displayLimit).map(item => `
         <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
         </div>
     `).join('');
 
-    if (matched.length > displayLimit) {
-        html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${matched.length - displayLimit} lagi.</div>`;
+    if (filtered.length > displayLimit) {
+        html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${filtered.length - displayLimit} lagi.</div>`;
     }
 
     dropdown.innerHTML = html;
@@ -653,24 +673,69 @@ function renderAdminList() {
 function filterAdminList(query) {
     const q = query.toLowerCase();
     const tbody = document.querySelector('#admin-master-table tbody');
+    tbody.innerHTML = ''; // Clear existing rows
 
-    const matched = masterItems.filter(item =>
-        String(item.Item_ID).toLowerCase().includes(q) ||
-        String(item.Item_Name).toLowerCase().includes(q)
-    );
+    const filtered = masterItems.filter(item => {
+        const idMatch = String(item.Item_ID).toLowerCase().includes(q);
+        const nameMatch = String(item.Item_Name).toLowerCase().includes(q);
+        return idMatch || nameMatch;
+    });
 
-    if (matched.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Tiada rekod dijumpai.</td></tr>';
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 1.5rem;">Tiada rekod dijumpai.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = matched.map(item => `
-        <tr>
-            <td><strong>${item.Item_ID}</strong></td>
-            <td>${item.Item_Name}</td>
-            <td><strong>${item.Current_Stock || 0}</strong> <small style="color:var(--text-secondary)">${item.Unit}</small></td>
-        </tr>
-    `).join('');
+    filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        const isDiscontinued = item.Status === 'Discontinued';
+        const statusBadge = isDiscontinued ? `<span class="stock-badge badge-danger">Discontinued</span>` : `<span class="stock-badge badge-success">Aktif</span>`;
+        const actionBtnText = isDiscontinued ? 'Aktifkan Semula' : 'Set Discontinued';
+        const actionBtnClass = isDiscontinued ? 'btn-submit' : 'btn-cancel';
+        const newStatusTarget = isDiscontinued ? 'Active' : 'Discontinued';
+
+        tr.innerHTML = `
+            <td style="${isDiscontinued ? 'text-decoration: line-through; color: #999;' : ''}">${item.Item_ID}</td>
+            <td style="${isDiscontinued ? 'color: #999;' : ''}">${item.Item_Name} <br><small style="color:var(--text-secondary)">${statusBadge}</small></td>
+            <td>${item.Current_Stock || 0}</td>
+            <td>
+                <button class="${actionBtnClass}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 5px; margin: 0; width: 100%;" onclick="toggleItemStatus('${item.Item_ID}', '${newStatusTarget}')">
+                    ${actionBtnText}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function toggleItemStatus(id, newStatus) {
+    if (!confirm(`Adakah anda pasti ingin menukar status item ${id} kepada ${newStatus}?`)) {
+        return;
+    }
+
+    document.getElementById('global-loader').style.display = 'flex';
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "toggleItemStatus",
+                payload: { Item_ID: id, New_Status: newStatus }
+            })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+            showToast(`Status item ${id} berjaya dikemaskini kepada ${newStatus}.`, 'success');
+            await fetchItems(); // Refresh items to update the UI
+            renderAdminList(); // Re-render admin list
+        } else {
+            showErrorModal(data.message || 'Gagal mengemaskini status item.');
+        }
+    } catch (e) {
+        showErrorModal('Ralat sambungan pelayan.');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
 }
 
 // Handler for Unified Item Registration / Stok In
