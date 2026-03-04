@@ -26,8 +26,10 @@ function logout() {
     document.getElementById('btn-login').style.display = 'none';
     document.getElementById('btn-create-pin').style.display = 'none';
 
-    // Hide admin tab
+    // Hide admin tab & reset header name
     document.getElementById('btn-tab-admin').style.display = 'none';
+    if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = '';
+    if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'none';
 
     // Clear localStorage values
     localStorage.removeItem('bdt_login_user');
@@ -65,7 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
             if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
             if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+
             if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
+            if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'inline-block';
 
             if (isAdmin) {
                 document.getElementById('btn-tab-admin').style.display = 'inline-block';
@@ -543,7 +547,9 @@ async function submitLogin() {
             if (document.getElementById('out-user')) document.getElementById('out-user').value = currentUser;
             if (document.getElementById('ret-user')) document.getElementById('ret-user').value = currentUser;
             if (document.getElementById('add-user')) document.getElementById('add-user').value = currentUser;
+
             if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
+            if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'inline-block';
 
             // Show admin tab if authorized
             if (isAdmin) {
