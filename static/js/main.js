@@ -137,7 +137,7 @@ function renderRecentTransactions(transactions) {
 
         return `
         <tr>
-            <td style="font-size: 0.85rem;">${t.Timestamp}</td>
+            <td style="font-size: 0.85rem;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
@@ -145,6 +145,18 @@ function renderRecentTransactions(transactions) {
             <td>${t.Entered_By}</td>
         </tr>
     `}).join('');
+}
+
+function formatTimestamp(isoString) {
+    if (!isoString) return '-';
+    if (String(isoString).includes('T')) {
+        const d = new Date(isoString);
+        if (!isNaN(d.getTime())) {
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+    }
+    return isoString;
 }
 
 // Custom Searchable Dropdown Logic
@@ -413,10 +425,10 @@ async function executePendingTransaction() {
             }, 1500);
 
         } else {
-            showToast(data.message || 'Terdapat ralat semasa menyimpan.', 'error');
+            showErrorModal(data.message || 'Terdapat ralat semasa menyimpan.');
         }
     } catch (e) {
-        showToast('Ralat sambungan pelayan.', 'error');
+        showErrorModal('Ralat sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
         pendingTransactionPayload = null;
@@ -574,10 +586,10 @@ async function handleUnifiedAdd(event) {
                 switchTab('dashboard');
             }, 1500);
         } else {
-            showToast(data.message || 'Gagal menyimpan transaksi.', 'error');
+            showErrorModal(data.message || 'Gagal menyimpan transaksi.');
         }
     } catch (e) {
-        showToast('Ralat sambungan pelayan.', 'error');
+        showErrorModal('Ralat sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -593,4 +605,14 @@ function showToast(msg, type = 'success') {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
+}
+
+// Error Modal Utility
+function showErrorModal(msg) {
+    document.getElementById('error-alert-msg').textContent = msg;
+    document.getElementById('error-alert-modal').style.display = 'flex';
+}
+
+function closeErrorModal() {
+    document.getElementById('error-alert-modal').style.display = 'none';
 }

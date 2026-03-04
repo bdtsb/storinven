@@ -309,9 +309,28 @@
         </div>
     </div>
 
+    <!-- Error Alert Modal -->
+    <div class="modal-overlay" id="error-alert-modal">
+        <div class="modal-content" style="border-top: 5px solid var(--danger-color);">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h3 class="modal-title" style="color: var(--danger-color);">Ralat Transaksi</h3>
+            <p id="error-alert-msg" style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.5;"></p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn-cancel" onclick="closeErrorModal()" style="width: 100%;">Tutup Mesej (Close)</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast">Message goes here</div>
 
-    <script src="./static/js/main.js?v=2"></script>
+    <script src="./static/js/main.js?v=3"></script>
 </body>
 
 </html>
