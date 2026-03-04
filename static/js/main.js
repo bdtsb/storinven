@@ -213,8 +213,8 @@ function updateDashboard() {
                 tr.innerHTML = `
                     <td>${item.Item_ID}</td>
                     <td>${item.Item_Name}</td>
-                    <td><span class="stock-badge ${parseInt(item.Current_Stock || 0) === 0 ? 'badge-danger' : 'badge-warning'}">${item.Current_Stock || 0}</span></td>
-                    <td>${item.Min_Stock || 0}</td>
+                    <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
+                    <td style="color: #ff8c00; font-weight: bold;">${item.Min_Stock || 0}</td>
                 `;
                 lowStockTbody.appendChild(tr);
             }
@@ -383,8 +383,14 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
         document.getElementById('new-item-fields').style.display = 'none';
         document.getElementById('new-item-threshold').style.display = 'none';
-        document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
-        document.getElementById('add-status').style.color = 'var(--text-secondary)';
+
+        const isDiscontinued = exactMatch.Status === 'Discontinued';
+        const statusText = isDiscontinued ?
+            `<strong style="color:var(--danger-color)">Barang Discontinued (Akan diaktifkan semula secara automatik)</strong>` :
+            `Item Sedia Ada (Stok Semasa: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
+
+        document.getElementById('add-status').innerHTML = statusText;
+        document.getElementById('add-status').style.color = isDiscontinued ? '' : 'var(--text-secondary)';
     } else {
         // Reset to new item mode
         document.getElementById('add-item-id').value = '';
@@ -400,10 +406,9 @@ function filterUnifiedDropdown(query) {
         }
     }
 
-    // Filter items based on query AND ensuring they are not Discontinued
+    // Filter items based on query (including Discontinued)
     const filtered = masterItems.filter(item => {
-        if (item.Status === 'Discontinued') return false;
-        return item.Item_ID.toLowerCase().includes(q) || item.Item_Name.toLowerCase().includes(q);
+        return String(item.Item_ID).toLowerCase().includes(q) || String(item.Item_Name).toLowerCase().includes(q);
     });
 
     let html = "";
@@ -425,12 +430,18 @@ function filterUnifiedDropdown(query) {
     }
 
     const displayLimit = 50;
-    html += filtered.slice(0, displayLimit).map(item => `
+    html += filtered.slice(0, displayLimit).map(item => {
+        const isDiscontinued = item.Status === 'Discontinued';
+        const nameStyle = isDiscontinued ? 'text-decoration: line-through; color: #999;' : '';
+        const badge = isDiscontinued ? `<span class="stock-badge badge-danger" style="font-size: 0.6rem; padding: 0.1rem 0.3rem; vertical-align: middle; margin-left: 5px;">Discontinued</span>` : '';
+
+        return `
         <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')">
-            <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
+            <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     if (filtered.length > displayLimit) {
         html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${filtered.length - displayLimit} lagi.</div>`;
