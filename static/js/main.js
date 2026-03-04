@@ -383,6 +383,7 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
         document.getElementById('new-item-fields').style.display = 'none';
         document.getElementById('new-item-threshold').style.display = 'none';
+        document.getElementById('new-item-supplier').style.display = 'none';
 
         const isDiscontinued = exactMatch.Status === 'Discontinued';
         const statusText = isDiscontinued ?
@@ -398,6 +399,7 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').style.backgroundColor = 'white';
         document.getElementById('new-item-fields').style.display = 'block';
         document.getElementById('new-item-threshold').style.display = 'block';
+        document.getElementById('new-item-supplier').style.display = 'block';
         if (q.length > 0) {
             document.getElementById('add-status').innerHTML = `Item Baru (Sila lengkapkan butiran di bawah)`;
             document.getElementById('add-status').style.color = 'var(--success-color)';
