@@ -272,7 +272,7 @@ function showDropdown(prefix) {
     filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit) {
+function selectItem(prefix, id, name, stock, unit, totalQty) {
     document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
     document.getElementById(`${prefix}-item-id`).value = id;
     document.getElementById(`${prefix}-item-name`).value = name;
@@ -285,6 +285,12 @@ function selectItem(prefix, id, name, stock, unit) {
         const qtyInput = document.getElementById('out-qty');
         qtyInput.max = stock;
         qtyInput.placeholder = `Max: ${stock}`;
+    } else if (prefix === 'ret') {
+        const maxReturn = parseInt(totalQty || stock) - parseInt(stock);
+        const qtyInput = document.getElementById('ret-qty');
+        qtyInput.max = maxReturn;
+        qtyInput.placeholder = `Max: ${maxReturn}`;
+        stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
     }
 
     document.getElementById(`${prefix}-dropdown`).classList.remove('active');
@@ -309,7 +315,7 @@ function filterDropdown(prefix, query) {
     // Limit to 50 results so 500+ items don't freeze the DOM
     const displayLimit = 50;
     let html = matched.slice(0, displayLimit).map(item => `
-        <div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}')">
+        <div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
         </div>
@@ -519,7 +525,12 @@ async function handleTransaction(event, type) {
         const maxStock = parseInt(document.getElementById('out-qty').max || 0);
         if (qty > maxStock) return showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
     } else if (type === 'RETURN') {
-        payload.Project = document.getElementById('ret-project').value;
+        payload.Project = 'Dikembalikan'; // Fixed string instead of requiring form input
+        const qty = parseInt(payload.Quantity);
+        const maxReturn = parseInt(document.getElementById('ret-qty').max || 0);
+        if (qty > maxReturn) {
+            return showToast(`Anda hanya boleh memulangkan maksimum ${maxReturn} unit. Sila semak semula!`, 'error');
+        }
     }
 
     document.getElementById('global-loader').style.display = 'flex';
