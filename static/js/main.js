@@ -242,8 +242,8 @@ function renderRecentTransactions(transactions) {
 
     tbody.innerHTML = transactions.map(t => {
         let badgeClass = 'badge-in';
-        let typeDisplay = 'IN';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'OUT'; }
+        let typeDisplay = 'MASUK';
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
         if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
 
         return `
@@ -278,8 +278,8 @@ function renderProfileHistory() {
     // Since transactions from server are already reverse-chronological (latest first), we just render them:
     tbody.innerHTML = personalTrans.map(t => {
         let badgeClass = 'badge-in';
-        let typeDisplay = 'IN';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'OUT'; }
+        let typeDisplay = 'MASUK';
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
         if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
 
         return `
