@@ -248,12 +248,12 @@ function renderRecentTransactions(transactions) {
 
         return `
         <tr>
-            <td style="font-size: 0.85rem;">${formatTimestamp(t.Timestamp)}</td>
-            <td><span class="badge ${badgeClass}">${typeDisplay}</span></td>
+            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
-            <td>${t.Project || '-'}</td>
-            <td>${t.Entered_By}</td>
+            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
+            <td style="font-size: 0.75rem;">${t.Entered_By}</td>
         </tr>
     `}).join('');
 }
@@ -284,11 +284,11 @@ function renderProfileHistory() {
 
         return `
         <tr>
-            <td style="font-size: 0.85rem;">${formatTimestamp(t.Timestamp)}</td>
-            <td><span class="badge ${badgeClass}">${typeDisplay}</span></td>
+            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
-            <td>${t.Project || t.Remarks || '-'}</td>
+            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
         </tr>
     `}).join('');
 }
@@ -564,7 +564,7 @@ async function handleTransaction(event, type) {
         const maxStock = parseInt(document.getElementById('out-qty').max || 0);
         if (qty > maxStock) return showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
     } else if (type === 'RETURN') {
-        payload.Project = 'Dikembalikan'; // Fixed string instead of requiring form input
+        payload.Project = 'Dikembalikan'; // We keep the backend payload consistent
         const qty = parseInt(payload.Quantity);
         const maxReturn = parseInt(document.getElementById('ret-qty').max || 0);
         if (qty > maxReturn) {
