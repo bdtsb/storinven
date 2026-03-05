@@ -178,7 +178,8 @@ async function fetchItems() {
             if (document.getElementById('add-search')) filterUnifiedDropdown('');
         }
     } catch (error) {
-        showToast('Ralat memuatkan barang dari pangkalan data', 'error');
+        console.error(error);
+        showToast('Ralat DB: ' + error.message, 'error');
     }
 }
 
@@ -193,7 +194,8 @@ async function fetchTransactions() {
             sortProfileTransactions();
         }
     } catch (error) {
-        showToast('Ralat memuatkan rekod transaksi terkini', 'error');
+        console.error(error);
+        showToast('Ralat Transaksi: ' + error.message, 'error');
     }
 }
 
