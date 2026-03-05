@@ -534,3 +534,24 @@ tr:last-child td {
 .btn-cancel:hover {
   background-color: #7f8c8d;
 }
+
+/* Mobile Table Compactness */
+@media (max-width: 767px) {
+
+  th,
+  td {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.75rem;
+    word-break: break-word;
+  }
+
+  th {
+    font-size: 0.7rem;
+    letter-spacing: 0;
+  }
+
+  .badge {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.65rem;
+  }
+}

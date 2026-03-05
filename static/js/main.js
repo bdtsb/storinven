@@ -242,9 +242,9 @@ function renderRecentTransactions(transactions) {
 
     tbody.innerHTML = transactions.map(t => {
         let badgeClass = 'badge-in';
-        let typeDisplay = 'STOCK IN';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'STOCK OUT'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'RETURN'; }
+        let typeDisplay = 'IN';
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'OUT'; }
+        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
 
         return `
         <tr>
@@ -278,9 +278,9 @@ function renderProfileHistory() {
     // Since transactions from server are already reverse-chronological (latest first), we just render them:
     tbody.innerHTML = personalTrans.map(t => {
         let badgeClass = 'badge-in';
-        let typeDisplay = 'STOCK IN';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'STOCK OUT'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'RETURN'; }
+        let typeDisplay = 'IN';
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'OUT'; }
+        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
 
         return `
         <tr>
@@ -299,7 +299,7 @@ function formatTimestamp(isoString) {
         const d = new Date(isoString);
         if (!isNaN(d.getTime())) {
             const pad = n => String(n).padStart(2, '0');
-            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            return `<div style="line-height:1.2;">${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(d.getHours())}:${pad(d.getMinutes())}</span></div>`;
         }
     }
     return isoString;
