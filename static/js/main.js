@@ -952,3 +952,69 @@ function showErrorModal(msg) {
 function closeErrorModal() {
     document.getElementById('error-alert-modal').style.display = 'none';
 }
+
+// ----------------------------------------
+// --- Sorting Logic For Transactions ---
+// ----------------------------------------
+
+function parseSortDate(dateStr) {
+    if (!dateStr) return 0;
+    // Format is either ISO or new standard: DD/MM/YY HH:MM AM/PM
+    const str = String(dateStr).trim();
+    if (str.includes('T')) {
+        return new Date(str).getTime() || 0;
+    }
+    const parts = str.split(' ');
+    if (parts.length === 3 && parts[0].includes('/')) {
+        const dateParts = parts[0].split('/');
+        const timeParts = parts[1].split(':');
+
+        // Ensure century digits
+        let year = dateParts[2];
+        if (year.length === 2) {
+            year = '20' + year;
+        }
+
+        let hours = parseInt(timeParts[0], 10);
+        let mins = parseInt(timeParts[1], 10);
+        const ampm = String(parts[2]).toUpperCase();
+
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+
+        // new Date(year, monthIndex, day, hours, minutes)
+        return new Date(parseInt(year), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]), hours, mins).getTime();
+    }
+    return new Date(str).getTime() || 0;
+}
+
+function doSortTransactions(arr, sortType) {
+    const sorted = [...arr];
+    sorted.sort((a, b) => {
+        if (sortType === 'Masa_Baru') return parseSortDate(b.Timestamp) - parseSortDate(a.Timestamp);
+        if (sortType === 'Masa_Lama') return parseSortDate(a.Timestamp) - parseSortDate(b.Timestamp);
+        if (sortType === 'Jenis') return String(a.Type).localeCompare(String(b.Type));
+        if (sortType === 'Barang') return String(a.Item_Name).localeCompare(String(b.Item_Name));
+        if (sortType === 'Kuantiti') return parseInt(b.Quantity || 0) - parseInt(a.Quantity || 0); // High to low
+        if (sortType === 'Projek') return String(a.Project || '-').localeCompare(String(b.Project || '-'));
+        if (sortType === 'Oleh') return String(a.Entered_By || '').localeCompare(String(b.Entered_By || ''));
+        return 0;
+    });
+    return sorted;
+}
+
+function sortRecentTransactions() {
+    const el = document.getElementById('sort-recent');
+    const sortVal = el ? el.value : 'Masa_Baru';
+    const recent = allTransactions.slice(0, 20);
+    const sorted = doSortTransactions(recent, sortVal);
+    renderRecentTransactions(sorted);
+}
+
+function sortProfileTransactions() {
+    const el = document.getElementById('sort-profile');
+    const sortVal = el ? el.value : 'Masa_Baru';
+    const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
+    const sorted = doSortTransactions(personalTrans, sortVal);
+    renderProfileHistory(sorted);
+}
