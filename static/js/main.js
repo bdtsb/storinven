@@ -245,6 +245,8 @@ function renderRecentTransactions(transactions) {
         let typeDisplay = 'MASUK';
         if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
         if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-in'; typeDisplay = 'DAFTAR'; }
+        if (t.Type === 'TAMBAH') { badgeClass = 'badge-in'; typeDisplay = 'TAMBAH'; }
 
         return `
         <tr>
@@ -281,6 +283,8 @@ function renderProfileHistory() {
         let typeDisplay = 'MASUK';
         if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
         if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-in'; typeDisplay = 'DAFTAR'; }
+        if (t.Type === 'TAMBAH') { badgeClass = 'badge-in'; typeDisplay = 'TAMBAH'; }
 
         return `
         <tr>
@@ -295,12 +299,27 @@ function renderProfileHistory() {
 
 function formatTimestamp(isoString) {
     if (!isoString) return '-';
-    if (String(isoString).includes('T')) {
-        const d = new Date(isoString);
-        if (!isNaN(d.getTime())) {
-            const pad = n => String(n).padStart(2, '0');
-            return `<div style="line-height:1.2;">${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(d.getHours())}:${pad(d.getMinutes())}</span></div>`;
-        }
+
+    // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
+    const parts = String(isoString).trim().split(' ');
+    if (parts.length === 3 && parts[0].includes('/')) {
+        return `<div style="line-height:1.2;">${parts[0]}<br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
+    }
+
+    // Fallback for older formats in the database
+    const d = new Date(isoString);
+    if (!isNaN(d.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        const day = pad(d.getDate());
+        const month = pad(d.getMonth() + 1);
+        const year = String(d.getFullYear()).slice(-2);
+        let hours = d.getHours();
+        const mins = pad(d.getMinutes());
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+
+        return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
     }
     return isoString;
 }
