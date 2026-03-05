@@ -113,8 +113,21 @@
                 </table>
             </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">
-                Transaksi Terkini (20 Terakhir)</h3>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-secondary);">
+                    Transaksi Terkini (20 Terakhir)</h3>
+                <select id="sort-recent" onchange="sortRecentTransactions()"
+                    style="width: auto; padding: 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <option value="Masa_Baru">Masa (Baru - Lama)</option>
+                    <option value="Masa_Lama">Masa (Lama - Baru)</option>
+                    <option value="Jenis">Jenis</option>
+                    <option value="Barang">Barang</option>
+                    <option value="Kuantiti">Kuantiti</option>
+                    <option value="Projek">Projek</option>
+                    <option value="Oleh">Oleh</option>
+                </select>
+            </div>
             <div class="table-responsive">
                 <table id="recent-trans-table">
                     <thead>
@@ -139,7 +152,7 @@
         <!-- Stock Out View -->
         <div id="view-stock_out" class="view-section">
             <h2 class="section-title">Keluarkan Stok untuk Projek</h2>
-            <form onsubmit="handleTransaction(event, 'STOCK_OUT')">
+            <form onsubmit="handleTransaction(event, 'AMBIL')">
                 <div class="form-group combo-box">
                     <label>Cari Barang</label>
                     <input type="text" id="out-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
@@ -174,7 +187,7 @@
         <!-- Return View -->
         <div id="view-return" class="view-section">
             <h2 class="section-title">Terima Pemulangan Stok dari Projek</h2>
-            <form onsubmit="handleTransaction(event, 'RETURN')">
+            <form onsubmit="handleTransaction(event, 'PULANG')">
                 <div class="form-group combo-box">
                     <label>Cari Barang</label>
                     <input type="text" id="ret-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
@@ -214,9 +227,20 @@
                     statistik...</p>
             </div>
 
-            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">
-                Sejarah Transaksi Anda (Terbaru)
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-secondary);">
+                    Sejarah Transaksi Anda (Terbaru)
+                </h3>
+                <select id="sort-profile" onchange="sortProfileTransactions()"
+                    style="width: auto; padding: 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <option value="Masa_Baru">Masa (Baru - Lama)</option>
+                    <option value="Masa_Lama">Masa (Lama - Baru)</option>
+                    <option value="Jenis">Jenis</option>
+                    <option value="Barang">Barang</option>
+                    <option value="Kuantiti">Kuantiti</option>
+                    <option value="Projek">Projek / Catatan</option>
+                </select>
+            </div>
             <div class="table-responsive" style="max-height: 400px; border: 1px solid var(--border-color);">
                 <table id="profile-trans-table">
                     <thead>

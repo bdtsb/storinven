@@ -189,10 +189,8 @@ async function fetchTransactions() {
         if (data.status === 'success') {
             document.getElementById('stat-total-logs').textContent = data.data.length;
             allTransactions = data.data; // Cache all for profile view
-            // Get only the 20 most recent
-            renderRecentTransactions(data.data.slice(0, 20));
-            // Render user-specific history
-            renderProfileHistory();
+            sortRecentTransactions();
+            sortProfileTransactions();
         }
     } catch (error) {
         showToast('Ralat memuatkan rekod transaksi terkini', 'error');
@@ -241,12 +239,16 @@ function renderRecentTransactions(transactions) {
     }
 
     tbody.innerHTML = transactions.map(t => {
-        let badgeClass = 'badge-in';
-        let typeDisplay = 'MASUK';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'DAFTAR') { badgeClass = 'badge-in'; typeDisplay = 'DAFTAR'; }
-        if (t.Type === 'TAMBAH') { badgeClass = 'badge-in'; typeDisplay = 'TAMBAH'; }
+        let badgeClass = 'badge-tambah';
+        let typeDisplay = 'TAMBAH';
+        if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+        if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+        if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+        // Fallbacks for old sheet data
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+        if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
         <tr>
@@ -260,31 +262,35 @@ function renderRecentTransactions(transactions) {
     `}).join('');
 }
 
-function renderProfileHistory() {
+function renderProfileHistory(sortedTransactions) {
     const tbody = document.querySelector('#profile-trans-table tbody');
     if (!tbody) return; // Fail-safe
 
     // Update Profile Stat display
     document.getElementById('profile-name-display').innerText = currentUser || "Pengguna Tidak Dikenali";
 
-    // Filter personal transactions
-    const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
+    // Filter personal transactions if not provided
+    const personalTrans = sortedTransactions || allTransactions.filter(t => t.Entered_By === currentUser);
 
-    document.getElementById('profile-stats-display').innerText = `Anda merekodkan ${personalTrans.length} unit transaksi setakat ini.`;
+    document.getElementById('profile-stats-display').innerText = `Anda merekodkan ${allTransactions.filter(t => t.Entered_By === currentUser).length} unit transaksi setakat ini.`;
 
     if (personalTrans.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
         return;
     }
 
-    // Since transactions from server are already reverse-chronological (latest first), we just render them:
+    // Render logic:
     tbody.innerHTML = personalTrans.map(t => {
-        let badgeClass = 'badge-in';
-        let typeDisplay = 'MASUK';
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'KELUAR'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'DAFTAR') { badgeClass = 'badge-in'; typeDisplay = 'DAFTAR'; }
-        if (t.Type === 'TAMBAH') { badgeClass = 'badge-in'; typeDisplay = 'TAMBAH'; }
+        let badgeClass = 'badge-tambah';
+        let typeDisplay = 'TAMBAH';
+        if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+        if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+        if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+        // Fallbacks for old sheet data
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+        if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
         <tr>
@@ -560,8 +566,8 @@ async function handleTransaction(event, type) {
     event.preventDefault();
 
     let prefix = 'in';
-    if (type === 'STOCK_OUT') prefix = 'out';
-    if (type === 'RETURN') prefix = 'ret';
+    if (type === 'AMBIL') prefix = 'out';
+    if (type === 'PULANG') prefix = 'ret';
 
     const itemId = document.getElementById(`${prefix}-item-id`).value;
     if (!itemId) return showToast('Sila pilih item dari senarai terlebih dahulu!', 'error');
@@ -577,12 +583,12 @@ async function handleTransaction(event, type) {
 
     if (type === 'STOCK_IN') {
         payload.Remarks = document.getElementById('in-remarks').value;
-    } else if (type === 'STOCK_OUT') {
+    } else if (type === 'AMBIL') {
         payload.Project = document.getElementById('out-project').value;
         const qty = parseInt(payload.Quantity);
         const maxStock = parseInt(document.getElementById('out-qty').max || 0);
         if (qty > maxStock) return showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
-    } else if (type === 'RETURN') {
+    } else if (type === 'PULANG') {
         payload.Project = 'Dikembalikan'; // We keep the backend payload consistent
         const qty = parseInt(payload.Quantity);
         const maxReturn = parseInt(document.getElementById('ret-qty').max || 0);

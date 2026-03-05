@@ -374,19 +374,24 @@ tr:last-child td {
   font-weight: 600;
 }
 
-.badge-in {
-  background: #e8f8f5;
-  color: var(--success-color);
+.badge-tambah {
+  background: #ebf5fb;
+  color: #2980b9;
 }
 
-.badge-out {
+.badge-ambil {
   background: #fdf2e9;
-  color: var(--warning-color);
+  color: #e67e22;
 }
 
-.badge-return {
+.badge-pulang {
   background: #f4ecf8;
   color: #8e44ad;
+}
+
+.badge-daftar {
+  background: #eafaf1;
+  color: #27ae60;
 }
 
 .badge-low {
