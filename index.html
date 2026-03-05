@@ -69,6 +69,7 @@
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
             <button class="tab-btn" onclick="switchTab('stock_out')">Stock Out</button>
             <button class="tab-btn" onclick="switchTab('return')">Return Stock</button>
+            <button class="tab-btn" onclick="switchTab('profile')">Profil</button>
             <button class="tab-btn" id="btn-tab-admin" onclick="switchTab('admin')" style="display:none;">Admin
                 Akses</button>
         </div>
@@ -200,6 +201,41 @@
                 <button type="submit" class="btn-submit" style="background-color: #8e44ad;">Terima Pemulangan
                     (Return)</button>
             </form>
+        </div>
+
+        <!-- Profile View -->
+        <div id="view-profile" class="view-section">
+            <h2 class="section-title">Profil & Rekod Transaksi Anda</h2>
+
+            <div
+                style="background: #f8fbff; border-left: 4px solid var(--primary-color); padding: 1rem; border-radius: 4px var(--radius) var(--radius) 4px; margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--text-primary);"
+                    id="profile-name-display">Maklumat Pengguna</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;" id="profile-stats-display">Memuatkan
+                    statistik...</p>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">
+                Sejarah Transaksi Anda (Terbaru)
+            </h3>
+            <div class="table-responsive" style="max-height: 400px; border: 1px solid var(--border-color);">
+                <table id="profile-trans-table">
+                    <thead>
+                        <tr>
+                            <th>Masa</th>
+                            <th>Jenis</th>
+                            <th>Barang</th>
+                            <th>Kuantiti</th>
+                            <th>Projek/Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align:center;">Memuatkan...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Admin View & Master List -->

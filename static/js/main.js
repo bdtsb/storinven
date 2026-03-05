@@ -3,6 +3,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCFY9S47tGGG450vY81
 
 let masterItems = [];
 let staffList = [];
+let allTransactions = []; // Store full history for profile filtering
 let pendingTransactionPayload = null; // Mostly used for SetPIN now
 
 // Global Auth State
@@ -187,8 +188,11 @@ async function fetchTransactions() {
         const data = await response.json();
         if (data.status === 'success') {
             document.getElementById('stat-total-logs').textContent = data.data.length;
+            allTransactions = data.data; // Cache all for profile view
             // Get only the 20 most recent
             renderRecentTransactions(data.data.slice(0, 20));
+            // Render user-specific history
+            renderProfileHistory();
         }
     } catch (error) {
         showToast('Ralat memuatkan rekod transaksi terkini', 'error');
@@ -250,6 +254,41 @@ function renderRecentTransactions(transactions) {
             <td><strong>${t.Quantity}</strong></td>
             <td>${t.Project || '-'}</td>
             <td>${t.Entered_By}</td>
+        </tr>
+    `}).join('');
+}
+
+function renderProfileHistory() {
+    const tbody = document.querySelector('#profile-trans-table tbody');
+    if (!tbody) return; // Fail-safe
+
+    // Update Profile Stat display
+    document.getElementById('profile-name-display').innerText = currentUser || "Pengguna Tidak Dikenali";
+
+    // Filter personal transactions
+    const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
+
+    document.getElementById('profile-stats-display').innerText = `Anda merekodkan ${personalTrans.length} unit transaksi setakat ini.`;
+
+    if (personalTrans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
+        return;
+    }
+
+    // Since transactions from server are already reverse-chronological (latest first), we just render them:
+    tbody.innerHTML = personalTrans.map(t => {
+        let badgeClass = 'badge-in';
+        let typeDisplay = 'STOCK IN';
+        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-out'; typeDisplay = 'STOCK OUT'; }
+        if (t.Type === 'RETURN') { badgeClass = 'badge-return'; typeDisplay = 'RETURN'; }
+
+        return `
+        <tr>
+            <td style="font-size: 0.85rem;">${formatTimestamp(t.Timestamp)}</td>
+            <td><span class="badge ${badgeClass}">${typeDisplay}</span></td>
+            <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
+            <td><strong>${t.Quantity}</strong></td>
+            <td>${t.Project || t.Remarks || '-'}</td>
         </tr>
     `}).join('');
 }
@@ -553,6 +592,7 @@ async function handleTransaction(event, type) {
             document.getElementById(`${prefix}-current-stock`).innerHTML = '';
 
             await fetchItems();
+            await fetchTransactions();
             setTimeout(() => switchTab('dashboard'), 1500);
 
         } else {
@@ -849,6 +889,7 @@ async function handleUnifiedAdd(event) {
 
             // Refresh items so it appears in dropdowns immediately
             await fetchItems();
+            await fetchTransactions();
 
             setTimeout(() => {
                 switchTab('dashboard');
