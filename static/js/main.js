@@ -327,6 +327,8 @@ function formatTimestamp(isoString) {
         const mins = pad(d.getMinutes());
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+
         return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
     }
     return isoString;
@@ -1093,6 +1095,7 @@ function parseSortDate(dateStr) {
         // new Date(year, monthIndex, day, hours, minutes)
         return new Date(parseInt(year), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]), hours, mins).getTime();
     }
+
     return new Date(str).getTime() || 0;
 }
 
