@@ -156,7 +156,7 @@ async function fetchStaff() {
 }
 
 function populateStaffDropdowns() {
-    const options = `<option value="" disabled selected>Senarai Ahli</option>` +
+    const options = `<option value="" disabled selected>Senarai Nama</option>` +
         staffList.map(s => `<option value="${s.Staff_Name}">${s.Staff_Name}</option>`).join('');
 
     if (document.getElementById('login-user')) document.getElementById('login-user').innerHTML = options;

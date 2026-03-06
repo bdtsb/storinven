@@ -177,6 +177,67 @@ header {
   border-color: var(--primary-color);
 }
 
+/* Custom Tab Button Colors */
+.tab-dash {
+  color: #2980b9;
+  border-color: #2980b9;
+}
+
+.tab-dash:hover,
+.tab-dash.active {
+  background-color: #2980b9;
+  color: white;
+  border-color: #2980b9;
+}
+
+.tab-ambil {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.tab-ambil:hover,
+.tab-ambil.active {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+.tab-pulang {
+  color: #8e44ad;
+  border-color: #8e44ad;
+}
+
+.tab-pulang:hover,
+.tab-pulang.active {
+  background-color: #8e44ad;
+  color: white;
+  border-color: #8e44ad;
+}
+
+.tab-profil {
+  color: #d4ac0d;
+  border-color: #d4ac0d;
+}
+
+.tab-profil:hover,
+.tab-profil.active {
+  background-color: #f1c40f;
+  color: white;
+  border-color: #f1c40f;
+}
+
+.tab-admin {
+  color: #7f8c8d;
+  border-color: #7f8c8d;
+}
+
+.tab-admin:hover,
+.tab-admin.active {
+  background-color: #7f8c8d;
+  color: white;
+  border-color: #7f8c8d;
+}
+
 /* Cards & Sections */
 .view-section {
   display: none;
@@ -304,12 +365,12 @@ input::placeholder {
 
 .btn-submit {
   width: 100%;
-  padding: 16px;
+  padding: 10px 14px;
   background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: var(--font-btn);
+  font-size: var(--font-body);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;

@@ -25,7 +25,7 @@
 
             <div class="form-group">
                 <select id="login-user" style="margin-bottom: 10px;" onchange="handleLoginUserSelect()">
-                    <option value="" disabled selected>Memuatkan Ahli...</option>
+                    <option value="" disabled selected>Memuatkan senarai...</option>
                 </select>
             </div>
             <div class="form-group" id="login-pin-group" style="display:none;">
@@ -68,12 +68,12 @@
 
         <!-- Application Tabs -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('stock_out')">Ambil Barang</button>
-            <button class="tab-btn" onclick="switchTab('return')">Pulang Barang</button>
-            <button class="tab-btn" onclick="switchTab('profile')">Profil</button>
-            <button class="tab-btn" id="btn-tab-admin" onclick="switchTab('admin')" style="display:none;">Admin
-                Akses</button>
+            <button class="tab-btn tab-dash active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn tab-ambil" onclick="switchTab('stock_out')">Ambil Barang</button>
+            <button class="tab-btn tab-pulang" onclick="switchTab('return')">Pulang Barang</button>
+            <button class="tab-btn tab-profil" onclick="switchTab('profile')">Profil</button>
+            <button class="tab-btn tab-admin" id="btn-tab-admin" onclick="switchTab('admin')"
+                style="display:none;">Admin Akses</button>
         </div>
 
         <!-- Dashboard View -->
