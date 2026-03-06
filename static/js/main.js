@@ -1,8 +1,10 @@
 // PLEASE REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCFY9S47tGGG450vY81ZjbyF2C6ZM8GPAKsVxftBWrbaZpONFuZ0FZDaLQyVfX2BIOsg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQpS8E_k-043_1Qc6XhBksy9U72XW1bK0p3Gv4-dZngfX-YtN9t9-bM2fJ7x3bB4W9g/exec'; // GANTI DENGAN WEB APP URL BARU
 
 let masterItems = [];
 let staffList = [];
+let outCart = []; // Cart array for Stock Out
+let retCart = []; // Cart array for Returns
 let allTransactions = []; // Store full history for profile filtering
 let pendingTransactionPayload = null; // Mostly used for SetPIN now
 
@@ -124,14 +126,14 @@ function switchTab(viewId) {
 
     // Update views
     document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
-    document.getElementById(`view-${viewId}`).classList.add('active');
+    document.getElementById(`view - ${viewId} `).classList.add('active');
 
     // Refresh data if going to dashboard
     if (viewId === 'dashboard') {
         fetchTransactions();
         fetchItems();
         // Background sync staff updates without loaders disrupting UI
-        fetch(`${SCRIPT_URL}?action=getStaff`)
+        fetch(`${SCRIPT_URL}?action = getStaff`)
             .then(r => r.json())
             .then(d => { if (d.status === 'success') staffList = d.data; })
             .catch(() => { });
@@ -144,7 +146,7 @@ function switchTab(viewId) {
 
 async function fetchStaff() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=getStaff`);
+        const response = await fetch(`${SCRIPT_URL}?action = getStaff`);
         const data = await response.json();
         if (data.status === 'success') {
             staffList = data.data;
@@ -156,15 +158,15 @@ async function fetchStaff() {
 }
 
 function populateStaffDropdowns() {
-    const options = `<option value="" disabled selected>Senarai Nama</option>` +
-        staffList.map(s => `<option value="${s.Staff_Name}">${s.Staff_Name}</option>`).join('');
+    const options = `< option value = "" disabled selected > Senarai Nama</option > ` +
+        staffList.map(s => `< option value = "${s.Staff_Name}" > ${s.Staff_Name}</option > `).join('');
 
     if (document.getElementById('login-user')) document.getElementById('login-user').innerHTML = options;
 }
 
 async function fetchItems() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=getItems`);
+        const response = await fetch(`${SCRIPT_URL}?action = getItems`);
         const data = await response.json();
         if (data.status === 'success') {
             masterItems = data.data;
@@ -185,7 +187,7 @@ async function fetchItems() {
 
 async function fetchTransactions() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=getTransactions`);
+        const response = await fetch(`${SCRIPT_URL}?action = getTransactions`);
         const data = await response.json();
         if (data.status === 'success') {
             document.getElementById('stat-total-logs').textContent = data.data.length;
@@ -215,11 +217,11 @@ function updateDashboard() {
                 lowStockCount++;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${item.Item_ID}</td>
+    < td > ${item.Item_ID}</td >
                     <td>${item.Item_Name}</td>
                     <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
                     <td style="color: #ff8c00; font-weight: bold;">${item.Min_Stock || 0}</td>
-                `;
+`;
                 lowStockTbody.appendChild(tr);
             }
         }
@@ -253,14 +255,14 @@ function renderRecentTransactions(transactions) {
         if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
-        <tr>
+    < tr >
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
             <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
             <td style="font-size: 0.75rem;">${t.Entered_By}</td>
-        </tr>
+        </tr >
     `}).join('');
 }
 
@@ -295,13 +297,13 @@ function renderProfileHistory(sortedTransactions) {
         if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
-        <tr>
+    < tr >
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
             <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
-        </tr>
+        </tr >
     `}).join('');
 }
 
@@ -311,7 +313,7 @@ function formatTimestamp(isoString) {
     // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
     const parts = String(isoString).trim().split(' ');
     if (parts.length === 3 && parts[0].includes('/')) {
-        return `<div style="line-height:1.2;">${parts[0]}<br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
+        return `< div style = "line-height:1.2;" > ${parts[0]} <br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
     }
 
     // Fallback for older formats in the database
@@ -327,35 +329,59 @@ function formatTimestamp(isoString) {
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
 
-        return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
+        return `< div style = "line-height:1.2;" > ${day} /${month}/${year} <br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
     }
     return isoString;
 }
 
 // Custom Searchable Dropdown Logic
 function showDropdown(prefix) {
-    document.getElementById(`${prefix}-dropdown`).classList.add('active');
-    filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
+    document.getElementById(`${prefix} -dropdown`).classList.add('active');
+    filterDropdown(prefix, document.getElementById(`${prefix} -search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit, totalQty) {
-    document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
-    document.getElementById(`${prefix}-item-id`).value = id;
-    document.getElementById(`${prefix}-item-name`).value = name;
+function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "") {
+    document.getElementById(`${prefix} -search`).value = `${id} - ${name} `;
+    document.getElementById(`${prefix} -item - id`).value = id;
+    document.getElementById(`${prefix} -item - name`).value = name;
 
-    const stockEl = document.getElementById(`${prefix}-current-stock`);
+    const stockEl = document.getElementById(`${prefix} -current - stock`);
     stockEl.innerHTML = `Stok Terkini: <strong style="color:var(--primary-color)">${stock} ${unit}</strong>`;
+
+    const serialGroup = document.getElementById(`${prefix} -serial - group`);
+    const serialSelect = document.getElementById(`${prefix} -serial`);
+    const qtyInput = document.getElementById(`${prefix} -qty`);
+
+    // Serial Number Population Logic
+    if (hasSerial === "YA") {
+        if (serialGroup) serialGroup.style.display = "block";
+        qtyInput.value = 1;
+        qtyInput.readOnly = true; // Lock quantity to 1 for serial items
+
+        let serialsToMap = prefix === 'out' ? availSerials : borSerials;
+        let serialArr = serialsToMap.split(',').map(s => s.trim()).filter(s => s !== "");
+
+        if (serialArr.length === 0) {
+            serialSelect.innerHTML = `<option value="" disabled selected>Tiada Siri Tersedia. (Habis/Penuh)</option>`;
+        } else {
+            serialSelect.innerHTML = `<option value="" disabled selected>Pilih Serial...</option>` +
+                serialArr.map(s => `<option value="${s.replace(/"/g, '&quot;')}">${s}</option>`).join('');
+        }
+    } else {
+        if (serialGroup) serialGroup.style.display = "none";
+        if (serialSelect) serialSelect.innerHTML = `<option value="" disabled selected>Pilih Serial...</option>`;
+        qtyInput.value = "";
+        qtyInput.readOnly = false;
+    }
 
     // Set max quantity for stock out
     if (prefix === 'out') {
-        const qtyInput = document.getElementById('out-qty');
         qtyInput.max = stock;
-        qtyInput.placeholder = `Max: ${stock}`;
+        qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${stock}`;
     } else if (prefix === 'ret') {
         const maxReturn = parseInt(totalQty || stock) - parseInt(stock);
-        const qtyInput = document.getElementById('ret-qty');
         qtyInput.max = maxReturn;
-        qtyInput.placeholder = `Max: ${maxReturn}`;
+        qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${maxReturn}`;
         stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
     }
 
@@ -380,12 +406,17 @@ function filterDropdown(prefix, query) {
 
     // Limit to 50 results so 500+ items don't freeze the DOM
     const displayLimit = 50;
-    let html = matched.slice(0, displayLimit).map(item => `
-        <div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}')">
+    let html = matched.slice(0, displayLimit).map(item => {
+        const safeName = (item.Item_Name || "").replace(/'/g, "\\'");
+        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
+        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     if (matched.length > displayLimit) {
         html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${matched.length - displayLimit} lagi. Sila taip untuk tapis.</div>`;
@@ -563,70 +594,143 @@ function selectSupplier(name) {
     document.getElementById('supplier-dropdown').classList.remove('active');
 }
 
-// Form Submission handler
-async function handleTransaction(event, type) {
+// --- BATCH CART LOGIC ---
+function addToCart(event, type) {
     event.preventDefault();
-
-    let prefix = 'in';
-    if (type === 'AMBIL') prefix = 'out';
-    if (type === 'PULANG') prefix = 'ret';
+    let prefix = type === 'AMBIL' ? 'out' : 'ret';
 
     const itemId = document.getElementById(`${prefix}-item-id`).value;
-    if (!itemId) return showToast('Sila pilih item dari senarai terlebih dahulu!', 'error');
+    const itemName = document.getElementById(`${prefix}-item-name`).value;
+    const qty = parseInt(document.getElementById(`${prefix}-qty`).value);
+    const project = prefix === 'out' ? document.getElementById('out-project').value : '-';
 
-    const payload = {
-        Type: type,
+    if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
+
+    const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
+    if (prefix === 'out' && qty > maxStock) return showToast('Kuantiti ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
+
+    const serialGroup = document.getElementById(`${prefix}-serial-group`);
+    const serialSelect = document.getElementById(`${prefix}-serial`);
+    let selectedSerial = "";
+
+    if (serialGroup && serialGroup.style.display === "block") {
+        selectedSerial = serialSelect.value;
+        if (!selectedSerial) return showToast('Sila pilih Nombor Siri barangan ini!', 'warning');
+    }
+
+    const cartItem = {
         Item_ID: itemId,
-        Item_Name: document.getElementById(`${prefix}-item-name`).value,
-        Quantity: document.getElementById(`${prefix}-qty`).value,
-        Entered_By: currentUser,
-        Staff_PIN: currentUserPin
+        Item_Name: itemName,
+        Quantity: qty,
+        Type: type,
+        Project: project,
+        Selected_Serial: selectedSerial,
+        Remarks: ""
     };
 
-    if (type === 'STOCK_IN') {
-        payload.Remarks = document.getElementById('in-remarks').value;
-    } else if (type === 'AMBIL') {
-        payload.Project = document.getElementById('out-project').value;
-        const qty = parseInt(payload.Quantity);
-        const maxStock = parseInt(document.getElementById('out-qty').max || 0);
-        if (qty > maxStock) return showToast('Kuantiti stok out melebihi stok yang ada!', 'error');
-    } else if (type === 'PULANG') {
-        payload.Project = 'Dikembalikan'; // We keep the backend payload consistent
-        const qty = parseInt(payload.Quantity);
-        const maxReturn = parseInt(document.getElementById('ret-qty').max || 0);
-        if (qty > maxReturn) {
-            return showToast(`Anda hanya boleh memulangkan maksimum ${maxReturn} unit. Sila semak semula!`, 'error');
+    if (type === 'AMBIL') {
+        if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
+            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
         }
+        outCart.push(cartItem);
+        renderCart('AMBIL');
+        document.getElementById('out-search').value = "";
+        document.getElementById('out-item-id').value = "";
+        document.getElementById('out-qty').value = "";
+        document.getElementById('out-project').value = "";
+        if (serialGroup) serialGroup.style.display = "none";
+        document.getElementById('out-current-stock').innerHTML = "";
+    } else {
+        if (retCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
+            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+        }
+        retCart.push(cartItem);
+        renderCart('PULANG');
+        document.getElementById('ret-search').value = "";
+        document.getElementById('ret-item-id').value = "";
+        document.getElementById('ret-qty').value = "";
+        if (serialGroup) serialGroup.style.display = "none";
+        document.getElementById('ret-current-stock').innerHTML = "";
     }
+}
+
+function renderCart(type) {
+    let prefix = type === 'AMBIL' ? 'out' : 'ret';
+    const container = document.getElementById(`${prefix}-cart-container`);
+    const tbody = document.getElementById(`${prefix}-cart-tbody`);
+    const cart = type === 'AMBIL' ? outCart : retCart;
+
+    if (cart.length === 0) {
+        if (container) container.style.display = "none";
+        return;
+    }
+
+    if (container) container.style.display = "block";
+    tbody.innerHTML = cart.map((c, index) => {
+        return `<tr>
+            <td style="font-size:0.85rem"><strong>${c.Item_ID}</strong><br><small style="color:var(--text-secondary)">${c.Item_Name}</small></td>
+            <td style="font-size:0.85rem">${c.Selected_Serial || '-'}</td>
+            <td><strong>${c.Quantity}</strong></td>
+            <td><button type="button" class="btn-cancel" style="padding: 4px 8px; font-size:0.75rem; margin:0; width:100%; border-radius:4px" onclick="removeFromCart('${type}', ${index})">Padam</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function removeFromCart(type, index) {
+    if (type === 'AMBIL') {
+        outCart.splice(index, 1);
+        renderCart('AMBIL');
+    } else {
+        retCart.splice(index, 1);
+        renderCart('PULANG');
+    }
+}
+
+async function submitCart(type) {
+    let cart = type === 'AMBIL' ? outCart : retCart;
+    if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
+
+    const staffName = document.getElementById('login-user').value || currentUser;
+    const staffPin = document.getElementById('login-pin').value || currentUserPin;
+
+    if (!staffName) return showToast('Sila log masuk dahulu!', 'error');
 
     document.getElementById('global-loader').style.display = 'flex';
 
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "addTransaction", payload: payload })
+            body: JSON.stringify({
+                action: 'submitBatchTransactions',
+                payload: {
+                    Entered_By: staffName,
+                    Staff_PIN: staffPin,
+                    transactions: cart
+                }
+            })
         });
 
         const data = await response.json();
-        if (response.ok && data.status === 'success') {
-            showToast(`Transaksi berjaya disimpan! Baki terkini: ${data.new_stock}`);
 
-            document.getElementById(`${prefix}-item-id`).value = '';
-            document.getElementById(`${prefix}-item-name`).value = '';
-            document.getElementById(`${prefix}-search`).value = '';
-            document.getElementById(`${prefix}-qty`).value = '';
-            if (document.getElementById(`${prefix}-project`)) document.getElementById(`${prefix}-project`).value = '';
-            document.getElementById(`${prefix}-current-stock`).innerHTML = '';
-
+        if (data.status === 'success') {
+            showToast(data.message, 'success');
+            if (type === 'AMBIL') {
+                outCart = [];
+                renderCart('AMBIL');
+                document.getElementById('out-project').value = ""; // Also clear project on success
+            } else {
+                retCart = [];
+                renderCart('PULANG');
+            }
             await fetchItems();
             await fetchTransactions();
             setTimeout(() => switchTab('dashboard'), 1500);
-
         } else {
-            showErrorModal(data.message || 'Terdapat ralat semasa menyimpan.');
+            showErrorModal(data.message || 'Ralat menyimpan transaksi kelompok.');
         }
-    } catch (e) {
-        showErrorModal('Ralat sambungan pelayan.');
+    } catch (error) {
+        showErrorModal('Ralat sambungan rangkaian: ' + error.message);
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -885,6 +989,12 @@ async function handleUnifiedAdd(event) {
         payload.Category = document.getElementById('add-category').value;
         payload.Unit = document.getElementById('add-unit').value;
         payload.Min_Stock = document.getElementById('add-min').value;
+
+        const hasSerial = document.getElementById('add-has-serial');
+        if (hasSerial && hasSerial.checked) {
+            payload.Punya_Serial = true;
+            payload.Serial_Tersedia = document.getElementById('add-serials').value;
+        }
 
         if (!payload.Category || !payload.Unit) {
             showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
