@@ -187,7 +187,7 @@ async function fetchItems() {
 
 async function fetchTransactions() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action = getTransactions`);
+        const response = await fetch(`${SCRIPT_URL}?action=getTransactions`);
         const data = await response.json();
         if (data.status === 'success') {
             document.getElementById('stat-total-logs').textContent = data.data.length;
