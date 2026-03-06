@@ -217,11 +217,11 @@ function updateDashboard() {
                 lowStockCount++;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-    < td > ${item.Item_ID}</td >
+                    <td>${item.Item_ID}</td>
                     <td>${item.Item_Name}</td>
                     <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
                     <td style="color: #ff8c00; font-weight: bold;">${item.Min_Stock || 0}</td>
-`;
+                `;
                 lowStockTbody.appendChild(tr);
             }
         }
@@ -255,14 +255,14 @@ function renderRecentTransactions(transactions) {
         if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
-    < tr >
+        <tr>
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
             <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
             <td style="font-size: 0.75rem;">${t.Entered_By}</td>
-        </tr >
+        </tr>
     `}).join('');
 }
 
@@ -297,13 +297,13 @@ function renderProfileHistory(sortedTransactions) {
         if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
         return `
-    < tr >
+        <tr>
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
             <td><strong>${t.Quantity}</strong></td>
             <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
-        </tr >
+        </tr>
     `}).join('');
 }
 
@@ -313,7 +313,7 @@ function formatTimestamp(isoString) {
     // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
     const parts = String(isoString).trim().split(' ');
     if (parts.length === 3 && parts[0].includes('/')) {
-        return `< div style = "line-height:1.2;" > ${parts[0]} <br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
+        return `<div style="line-height:1.2;">${parts[0]}<br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
     }
 
     // Fallback for older formats in the database
@@ -327,30 +327,28 @@ function formatTimestamp(isoString) {
         const mins = pad(d.getMinutes());
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-
-        return `< div style = "line-height:1.2;" > ${day} /${month}/${year} <br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
+        return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
     }
     return isoString;
 }
 
 // Custom Searchable Dropdown Logic
 function showDropdown(prefix) {
-    document.getElementById(`${prefix} -dropdown`).classList.add('active');
-    filterDropdown(prefix, document.getElementById(`${prefix} -search`).value);
+    document.getElementById(`${prefix}-dropdown`).classList.add('active');
+    filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
 function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "") {
-    document.getElementById(`${prefix} -search`).value = `${id} - ${name} `;
-    document.getElementById(`${prefix} -item - id`).value = id;
-    document.getElementById(`${prefix} -item - name`).value = name;
+    document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
+    document.getElementById(`${prefix}-item-id`).value = id;
+    document.getElementById(`${prefix}-item-name`).value = name;
 
-    const stockEl = document.getElementById(`${prefix} -current - stock`);
+    const stockEl = document.getElementById(`${prefix}-current-stock`);
     stockEl.innerHTML = `Stok Terkini: <strong style="color:var(--primary-color)">${stock} ${unit}</strong>`;
 
-    const serialGroup = document.getElementById(`${prefix} -serial - group`);
-    const serialSelect = document.getElementById(`${prefix} -serial`);
-    const qtyInput = document.getElementById(`${prefix} -qty`);
+    const serialGroup = document.getElementById(`${prefix}-serial-group`);
+    const serialSelect = document.getElementById(`${prefix}-serial`);
+    const qtyInput = document.getElementById(`${prefix}-qty`);
 
     // Serial Number Population Logic
     if (hasSerial === "YA") {
