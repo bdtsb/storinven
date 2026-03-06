@@ -126,14 +126,14 @@ function switchTab(viewId) {
 
     // Update views
     document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
-    document.getElementById(`view - ${viewId} `).classList.add('active');
+    document.getElementById(`view-${viewId}`).classList.add('active');
 
     // Refresh data if going to dashboard
     if (viewId === 'dashboard') {
         fetchTransactions();
         fetchItems();
         // Background sync staff updates without loaders disrupting UI
-        fetch(`${SCRIPT_URL}?action = getStaff`)
+        fetch(`${SCRIPT_URL}?action=getStaff`)
             .then(r => r.json())
             .then(d => { if (d.status === 'success') staffList = d.data; })
             .catch(() => { });
@@ -146,7 +146,7 @@ function switchTab(viewId) {
 
 async function fetchStaff() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action = getStaff`);
+        const response = await fetch(`${SCRIPT_URL}?action=getStaff`);
         const data = await response.json();
         if (data.status === 'success') {
             staffList = data.data;
@@ -158,15 +158,15 @@ async function fetchStaff() {
 }
 
 function populateStaffDropdowns() {
-    const options = `< option value = "" disabled selected > Senarai Nama</option > ` +
-        staffList.map(s => `< option value = "${s.Staff_Name}" > ${s.Staff_Name}</option > `).join('');
+    const options = `<option value="" disabled selected>Senarai Nama</option>` +
+        staffList.map(s => `<option value="${s.Staff_Name}">${s.Staff_Name}</option>`).join('');
 
     if (document.getElementById('login-user')) document.getElementById('login-user').innerHTML = options;
 }
 
 async function fetchItems() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action = getItems`);
+        const response = await fetch(`${SCRIPT_URL}?action=getItems`);
         const data = await response.json();
         if (data.status === 'success') {
             masterItems = data.data;
