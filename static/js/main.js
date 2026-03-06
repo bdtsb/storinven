@@ -959,7 +959,7 @@ function filterAdminList(query) {
             <td style="${isDiscontinued ? 'color: #999;' : ''}">${item.Item_Name} <br><small style="color:var(--text-secondary)">${statusBadge}</small></td>
             <td>${item.Current_Stock || 0}</td>
             <td>
-                <button class="${actionBtnClass}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 5px; margin: 0; width: 100%;" onclick="toggleItemStatus('${item.Item_ID}', '${newStatusTarget}')">
+                <button class="${actionBtnClass}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 5px; margin: 0; width: 100%;" onclick="toggleItemStatus('${String(item.Item_ID).replace(/'/g, "\\'")}', '${newStatusTarget}')">
                     ${actionBtnText}
                 </button>
             </td>
