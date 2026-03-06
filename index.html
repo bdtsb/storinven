@@ -486,9 +486,26 @@
         </div>
     </div>
 
-    <!-- Placeholder for deleted verify modal -->
-
-    <!-- Error Alert Modal -->
+    <!-- Custom Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-action-modal">
+        <div class="modal-content" style="border-top: 5px solid var(--primary-color);">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 class="modal-title" style="color: var(--primary-color);">Pengesahan Tindakan</h3>
+            <p id="confirm-action-msg" style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.5;">
+            </p>
+            <div class="modal-actions" style="justify-content: center; gap: 10px;">
+                <button class="btn-cancel" onclick="closeConfirmModal()" style="flex: 1;">Batal</button>
+                <button class="btn-submit" id="btn-confirm-action" style="flex: 1; margin: 0;">Sahkan</button>
+            </div>
+        </div>
+    </div>
     <div class="modal-overlay" id="error-alert-modal">
         <div class="modal-content" style="border-top: 5px solid var(--danger-color);">
             <div style="text-align: center; margin-bottom: 1rem;">

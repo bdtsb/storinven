@@ -968,10 +968,35 @@ function filterAdminList(query) {
     });
 }
 
-async function toggleItemStatus(id, newStatus) {
-    if (!confirm(`Adakah anda pasti ingin menukar status item ${id} kepada ${newStatus}?`)) {
-        return;
-    }
+let pendingToggleId = null;
+let pendingToggleStatusTarget = null;
+
+function toggleItemStatus(id, newStatus) {
+    pendingToggleId = id;
+    pendingToggleStatusTarget = newStatus;
+
+    document.getElementById('confirm-action-msg').innerText = `Adakah anda pasti ingin menukar status item ${id} kepada ${newStatus}?`;
+    document.getElementById('confirm-action-modal').style.display = 'flex';
+
+    const confirmBtn = document.getElementById('btn-confirm-action');
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+    newBtn.addEventListener('click', executeToggleItemStatus);
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirm-action-modal').style.display = 'none';
+    pendingToggleId = null;
+    pendingToggleStatusTarget = null;
+}
+
+async function executeToggleItemStatus() {
+    if (!pendingToggleId || !pendingToggleStatusTarget) return;
+
+    const id = pendingToggleId;
+    const newStatus = pendingToggleStatusTarget;
+    closeConfirmModal();
 
     document.getElementById('global-loader').style.display = 'flex';
     try {
