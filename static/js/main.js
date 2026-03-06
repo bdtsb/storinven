@@ -202,109 +202,135 @@ async function fetchTransactions() {
 }
 
 function updateDashboard() {
-    // Build Low Stock Table
-    const lowStockTbody = document.querySelector('#low-stock-table tbody');
-    lowStockTbody.innerHTML = '';
-    let lowStockCount = 0;
+    try {
+        // Build Low Stock Table
+        const lowStockTbody = document.querySelector('#low-stock-table tbody');
+        if (!lowStockTbody) return;
+        lowStockTbody.innerHTML = '';
+        let lowStockCount = 0;
+        let totalManagedItems = 0;
 
-    let totalManagedItems = 0;
-
-    masterItems.forEach(item => {
-        if (item.Status !== 'Discontinued') {
-            totalManagedItems++;
-
-            if (parseInt(item.Current_Stock || 0) <= parseInt(item.Min_Stock || 0)) {
-                lowStockCount++;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.Item_ID}</td>
-                    <td>${item.Item_Name}</td>
-                    <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
-                    <td style="color: #ff8c00; font-weight: bold;">${item.Min_Stock || 0}</td>
-                `;
-                lowStockTbody.appendChild(tr);
+        masterItems.forEach(item => {
+            if (item && item.Status !== 'Discontinued') {
+                totalManagedItems++;
+                if (parseInt(item.Current_Stock || 0, 10) <= parseInt(item.Min_Stock || 0, 10)) {
+                    lowStockCount++;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.Item_ID || '-'}</td>
+                        <td>${item.Item_Name || '-'}</td>
+                        <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
+                        <td style="color: #ff8c00; font-weight: bold;">${item.Min_Stock || 0}</td>
+                    `;
+                    lowStockTbody.appendChild(tr);
+                }
             }
+        });
+
+        const statTotal = document.getElementById('stat-total-items');
+        if (statTotal) statTotal.innerText = totalManagedItems;
+
+        const statLow = document.getElementById('stat-low-stock');
+        if (statLow) statLow.textContent = lowStockCount;
+
+        if (lowStockCount === 0) {
+            lowStockTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Semua stok dalam keadaan baik!</td></tr>';
         }
-    });
-
-    document.getElementById('stat-total-items').innerText = totalManagedItems;
-    document.getElementById('stat-low-stock').textContent = lowStockCount;
-
-    if (lowStockCount === 0) {
-        lowStockTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Semua stok dalam keadaan baik!</td></tr>';
+    } catch (err) {
+        console.error("Dashboard Render Error:", err);
     }
 }
 
 function renderRecentTransactions(transactions) {
-    const tbody = document.querySelector('#recent-trans-table tbody');
-    if (transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi.</td></tr>';
-        return;
+    try {
+        const tbody = document.querySelector('#recent-trans-table tbody');
+        if (!tbody) return;
+
+        if (!transactions || transactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = transactions.map(t => {
+            if (!t) return '';
+            let badgeClass = 'badge-tambah';
+            let typeDisplay = 'TAMBAH';
+            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            // Fallbacks for old sheet data
+            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+            if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+
+            return `
+            <tr>
+                <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+                <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
+                <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
+                <td><strong>${t.Quantity || 0}</strong></td>
+                <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
+                <td style="font-size: 0.75rem;">${t.Entered_By || '-'}</td>
+            </tr>
+        `}).join('');
+    } catch (err) {
+        console.error("Recent Trans Render Error:", err);
+        const tbody = document.querySelector('#recent-trans-table tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Ralat memuatkan data. Sila *refresh*.</td></tr>`;
     }
-
-    tbody.innerHTML = transactions.map(t => {
-        let badgeClass = 'badge-tambah';
-        let typeDisplay = 'TAMBAH';
-        if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-        if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-        if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
-        // Fallbacks for old sheet data
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
-
-        return `
-        <tr>
-            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
-            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
-            <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
-            <td><strong>${t.Quantity}</strong></td>
-            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
-            <td style="font-size: 0.75rem;">${t.Entered_By}</td>
-        </tr>
-    `}).join('');
 }
 
 function renderProfileHistory(sortedTransactions) {
-    const tbody = document.querySelector('#profile-trans-table tbody');
-    if (!tbody) return; // Fail-safe
+    try {
+        const tbody = document.querySelector('#profile-trans-table tbody');
+        if (!tbody) return; // Fail-safe
 
-    // Update Profile Stat display
-    document.getElementById('profile-name-display').innerText = currentUser || "Pengguna Tidak Dikenali";
+        // Update Profile Stat display safely
+        const nameDisplay = document.getElementById('profile-name-display');
+        if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
 
-    // Filter personal transactions if not provided
-    const personalTrans = sortedTransactions || allTransactions.filter(t => t.Entered_By === currentUser);
+        // Filter personal transactions if not provided
+        const personalTrans = sortedTransactions || (allTransactions ? allTransactions.filter(t => t && t.Entered_By === currentUser) : []);
 
-    document.getElementById('profile-stats-display').innerText = `Anda merekodkan ${allTransactions.filter(t => t.Entered_By === currentUser).length} unit transaksi setakat ini.`;
+        const statsDisplay = document.getElementById('profile-stats-display');
+        if (statsDisplay && allTransactions) {
+            statsDisplay.innerText = `Anda merekodkan ${allTransactions.filter(t => t && t.Entered_By === currentUser).length} unit transaksi setakat ini.`;
+        }
 
-    if (personalTrans.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
-        return;
+        if (!personalTrans || personalTrans.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
+            return;
+        }
+
+        // Render logic:
+        tbody.innerHTML = personalTrans.map(t => {
+            if (!t) return '';
+            let badgeClass = 'badge-tambah';
+            let typeDisplay = 'TAMBAH';
+            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            // Fallbacks for old sheet data
+            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+            if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+
+            return `
+            <tr>
+                <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+                <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
+                <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
+                <td><strong>${t.Quantity || 0}</strong></td>
+                <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
+            </tr>
+        `}).join('');
+    } catch (err) {
+        console.error("Profile Trans Render Error:", err);
+        const tbody = document.querySelector('#profile-trans-table tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Ralat memuatkan profil. Sila *refresh*.</td></tr>`;
     }
-
-    // Render logic:
-    tbody.innerHTML = personalTrans.map(t => {
-        let badgeClass = 'badge-tambah';
-        let typeDisplay = 'TAMBAH';
-        if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-        if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-        if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
-        // Fallbacks for old sheet data
-        if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-        if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
-
-        return `
-        <tr>
-            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
-            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
-            <td><strong>${t.Item_ID}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name}</small></td>
-            <td><strong>${t.Quantity}</strong></td>
-            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
-        </tr>
-    `}).join('');
 }
 
 function formatTimestamp(isoString) {
@@ -993,16 +1019,17 @@ async function handleUnifiedAdd(event) {
         Staff_PIN: currentUserPin
     };
 
+    // Map Serial Numbers (Applies to both New and Existing Items)
+    const hasSerial = document.getElementById('add-has-serial');
+    if (hasSerial && hasSerial.checked) {
+        payload.Punya_Serial = true;
+        payload.Serial_Tersedia = document.getElementById('add-serials').value;
+    }
+
     if (isNewItem) {
         payload.Category = document.getElementById('add-category').value;
         payload.Unit = document.getElementById('add-unit').value;
         payload.Min_Stock = document.getElementById('add-min').value;
-
-        const hasSerial = document.getElementById('add-has-serial');
-        if (hasSerial && hasSerial.checked) {
-            payload.Punya_Serial = true;
-            payload.Serial_Tersedia = document.getElementById('add-serials').value;
-        }
 
         if (!payload.Category || !payload.Unit) {
             showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
@@ -1120,9 +1147,9 @@ function doSortTransactions(arr, sortType) {
     sorted.sort((a, b) => {
         if (sortType === 'Masa_Baru') return parseSortDate(b.Timestamp) - parseSortDate(a.Timestamp);
         if (sortType === 'Masa_Lama') return parseSortDate(a.Timestamp) - parseSortDate(b.Timestamp);
-        if (sortType === 'Jenis') return String(a.Type).localeCompare(String(b.Type));
-        if (sortType === 'Barang') return String(a.Item_Name).localeCompare(String(b.Item_Name));
-        if (sortType === 'Kuantiti') return parseInt(b.Quantity || 0) - parseInt(a.Quantity || 0); // High to low
+        if (sortType === 'Jenis') return String(a.Type || '').localeCompare(String(b.Type || ''));
+        if (sortType === 'Barang') return String(a.Item_Name || '').localeCompare(String(b.Item_Name || ''));
+        if (sortType === 'Kuantiti') return parseInt(b.Quantity || 0, 10) - parseInt(a.Quantity || 0, 10);
         if (sortType === 'Projek') return String(a.Project || '-').localeCompare(String(b.Project || '-'));
         if (sortType === 'Oleh') return String(a.Entered_By || '').localeCompare(String(b.Entered_By || ''));
         return 0;
