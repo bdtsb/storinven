@@ -310,28 +310,36 @@ function renderProfileHistory(sortedTransactions) {
 function formatTimestamp(isoString) {
     if (!isoString) return '-';
 
-    // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
-    const parts = String(isoString).trim().split(' ');
-    if (parts.length === 3 && parts[0].includes('/')) {
-        return `<div style="line-height:1.2;">${parts[0]}<br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
-    }
+    try {
+        const str = String(isoString).trim();
+        const parts = str.split(' ');
 
-    // Fallback for older formats in the database
-    const d = new Date(isoString);
-    if (!isNaN(d.getTime())) {
-        const pad = n => String(n).padStart(2, '0');
-        const day = pad(d.getDate());
-        const month = pad(d.getMonth() + 1);
-        const year = String(d.getFullYear()).slice(-2);
-        let hours = d.getHours();
-        const mins = pad(d.getMinutes());
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
+        // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
+        if (parts.length === 3 && parts[0] && parts[0].includes('/')) {
+            return `<div style="line-height:1.2;">${parts[0]}<br><span style="color:var(--text-secondary);font-size:0.85em;">${parts[1]} ${parts[2]}</span></div>`;
+        }
 
-        return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
+        // Fallback for older formats in the database or ISO strings
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            const pad = n => String(n).padStart(2, '0');
+            const day = pad(d.getDate());
+            const month = pad(d.getMonth() + 1);
+            const year = String(d.getFullYear()).slice(-2);
+            let hours = d.getHours();
+            const mins = pad(d.getMinutes());
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+
+            return `<div style="line-height:1.2;">${day}/${month}/${year}<br><span style="color:var(--text-secondary);font-size:0.85em;">${pad(hours)}:${mins} ${ampm}</span></div>`;
+        }
+
+        return str; // If it's a completely unknown format, just print it raw
+    } catch (err) {
+        console.error("Error formatting timestamp:", isoString, err);
+        return '-'; // Fallback so rendering doesn't crash
     }
-    return isoString;
 }
 
 // Custom Searchable Dropdown Logic
@@ -1069,34 +1077,42 @@ function closeErrorModal() {
 
 function parseSortDate(dateStr) {
     if (!dateStr) return 0;
-    // Format is either ISO or new standard: DD/MM/YY HH:MM AM/PM
-    const str = String(dateStr).trim();
-    if (str.includes('T')) {
-        return new Date(str).getTime() || 0;
-    }
-    const parts = str.split(' ');
-    if (parts.length === 3 && parts[0].includes('/')) {
-        const dateParts = parts[0].split('/');
-        const timeParts = parts[1].split(':');
 
-        // Ensure century digits
-        let year = dateParts[2];
-        if (year.length === 2) {
-            year = '20' + year;
+    try {
+        const str = String(dateStr).trim();
+        if (str.includes('T')) {
+            return new Date(str).getTime() || 0;
         }
 
-        let hours = parseInt(timeParts[0], 10);
-        let mins = parseInt(timeParts[1], 10);
-        const ampm = String(parts[2]).toUpperCase();
+        const parts = str.split(' ');
+        if (parts.length === 3 && parts[0] && parts[0].includes('/') && parts[1] && parts[1].includes(':')) {
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
 
-        if (ampm === 'PM' && hours < 12) hours += 12;
-        if (ampm === 'AM' && hours === 12) hours = 0;
+            // Ensure century digits
+            let year = dateParts[2];
+            if (year && year.length === 2) {
+                year = '20' + year;
+            } else if (!year) {
+                year = new Date().getFullYear().toString();
+            }
 
-        // new Date(year, monthIndex, day, hours, minutes)
-        return new Date(parseInt(year), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]), hours, mins).getTime();
+            let hours = parseInt(timeParts[0], 10) || 0;
+            let mins = parseInt(timeParts[1], 10) || 0;
+            const ampm = String(parts[2]).toUpperCase();
+
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+
+            // new Date(year, monthIndex, day, hours, minutes)
+            return new Date(parseInt(year), (parseInt(dateParts[1]) || 1) - 1, parseInt(dateParts[0]) || 1, hours, mins).getTime() || 0;
+        }
+
+        return new Date(str).getTime() || 0;
+    } catch (err) {
+        console.error("Error parsing date for sort:", dateStr, err);
+        return 0; // Fallback to 0 so sort logic doesn't crash UI
     }
-
-    return new Date(str).getTime() || 0;
 }
 
 function doSortTransactions(arr, sortType) {
