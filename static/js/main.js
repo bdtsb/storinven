@@ -633,7 +633,8 @@ function filterSupplierDropdown(query) {
     let html = "";
     if (filtered.length === 0) {
         if (q.length > 0) {
-            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer; background:white;" onclick="selectSupplier('${q.replace(/'/g, "\\'")}')">✨ Tekan di sini untuk tetapkan '${q}' sebagai pembekal baharu.</div>`;
+            const displayTitle = toTitleCase(query.trim());
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer; background:white;" onclick="selectSupplier('${displayTitle.replace(/'/g, "\\'")}')">✨ Tekan di sini untuk tetapkan '${displayTitle}' sebagai pembekal baharu.</div>`;
         } else {
             html += `<div class="combo-item" style="color: var(--text-secondary); cursor:default; background:white;">Senarai pembekal kosong.</div>`;
         }
@@ -1107,6 +1108,12 @@ function handleImageSelection(event) {
     reader.readAsDataURL(file);
 }
 
+// Helper function to convert text to Title Case (Capitalize First Letters)
+function toTitleCase(str) {
+    if (!str) return "";
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 // Handler for Unified Item Registration / Stok In
 async function handleUnifiedAdd(event) {
     event.preventDefault();
@@ -1121,9 +1128,10 @@ async function handleUnifiedAdd(event) {
 
     const payload = {
         Item_ID: itemIdInput,
-        Item_Name: document.getElementById('add-name').value.trim(),
+        Item_Name: toTitleCase(document.getElementById('add-name').value.trim()),
         Quantity: document.getElementById('add-qty').value,
-        Remarks: document.getElementById('add-remarks').value,
+        Remarks: toTitleCase(document.getElementById('add-remarks').value.trim()),
+        Supplier: toTitleCase(document.getElementById('add-remarks').value.trim()),
         Image_Data: document.getElementById('add-image-base64').value,
         Entered_By: currentUser,
         Staff_PIN: currentUserPin
