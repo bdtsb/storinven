@@ -422,7 +422,15 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     const imgEl = document.getElementById(`${prefix}-item-image`);
     if (imgEl) {
         if (imageUrl && imageUrl.trim() !== "") {
-            imgEl.src = imageUrl;
+            let finalUrl = imageUrl;
+            // Convert standard Drive link to direct image link if needed
+            if (finalUrl.includes("drive.google.com/file/d/")) {
+                const match = finalUrl.match(/\/d\/(.*?)\//);
+                if (match && match[1]) {
+                    finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+            }
+            imgEl.src = finalUrl;
             imgEl.style.display = "block";
         } else {
             imgEl.style.display = "none";
