@@ -178,6 +178,9 @@ async function fetchItems() {
             ['out', 'ret'].forEach(prefix => filterDropdown(prefix, ''));
             // And unified dropdown
             if (document.getElementById('add-search')) filterUnifiedDropdown('');
+            
+            // Refresh Admin Master List
+            if (typeof filterAdminList === 'function') filterAdminList('');
         }
     } catch (error) {
         console.error(error);
@@ -1290,4 +1293,55 @@ function sortProfileTransactions() {
     const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
     const sorted = doSortTransactions(personalTrans, sortVal);
     renderProfileHistory(sorted);
+}
+
+// ----------------------------------------
+// --- Admin Master List Logic ---
+// ----------------------------------------
+function filterAdminList(query) {
+    if (!masterItems) return;
+    
+    const q = (query || "").toLowerCase().trim();
+    const tbody = document.querySelector('#admin-master-table tbody');
+    if (!tbody) return;
+
+    // Filter items based on query
+    const filtered = masterItems.filter(item => {
+        return String(item.Item_ID).toLowerCase().includes(q) || 
+               String(item.Item_Name).toLowerCase().includes(q) ||
+               String(item.Supplier || "").toLowerCase().includes(q);
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod dijumpai.</td></tr>';
+        return;
+    }
+
+    const html = filtered.map(item => {
+        const totalMasuk = parseInt(item.Total_Quantity || 0, 10);
+        const bakiSemasa = parseInt(item.Current_Stock || 0, 10);
+        const totalKeluar = totalMasuk - bakiSemasa;
+        
+        let statusBadge = '';
+        if (item.Status === 'Discontinued') {
+            statusBadge = '<span class="badge badge-danger">Discontinued</span>';
+        } else if (bakiSemasa <= parseInt(item.Min_Stock || 0, 10)) {
+            statusBadge = '<span class="badge" style="background:#fdedec; color:#e74c3c;">Stok Rendah</span>';
+        } else {
+            statusBadge = '<span class="badge" style="background:#eafaf1; color:#27ae60;">Aktif</span>';
+        }
+
+        return `
+            <tr>
+                <td><strong>${item.Item_ID}</strong></td>
+                <td>${item.Item_Name} <br><small style="color:var(--text-secondary)">Pembekal: ${item.Supplier || '-'}</small></td>
+                <td style="color: var(--primary-color); font-weight: bold;">${totalMasuk}</td>
+                <td style="color: var(--danger-color); font-weight: bold;">${totalKeluar}</td>
+                <td style="color: var(--success-color); font-weight: bold;">${bakiSemasa}</td>
+                <td>${statusBadge}</td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = html;
 }
