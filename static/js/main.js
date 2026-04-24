@@ -423,11 +423,16 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     if (imgEl) {
         if (imageUrl && imageUrl.trim() !== "") {
             let finalUrl = imageUrl;
-            // Convert standard Drive link to direct image link if needed
+            // Convert standard Drive link or old uc link to reliable Thumbnail API link
             if (finalUrl.includes("drive.google.com/file/d/")) {
                 const match = finalUrl.match(/\/d\/(.*?)\//);
                 if (match && match[1]) {
-                    finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                    finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+                }
+            } else if (finalUrl.includes("uc?export=view&id=")) {
+                const match = finalUrl.match(/id=(.*)/);
+                if (match && match[1]) {
+                    finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
                 }
             }
             imgEl.src = finalUrl;
