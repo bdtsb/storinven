@@ -1330,6 +1330,16 @@ function filterAdminList(query) {
         } else {
             statusBadge = '<span class="badge" style="background:#eafaf1; color:#27ae60;">Aktif</span>';
         }
+        
+        let actionButtons = `
+            <button onclick="quickAddStock('${item.Item_ID}')" style="background:#2980b9; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">➕ Tambah Stok</button>
+        `;
+        
+        if (item.Status === 'Discontinued') {
+            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', true)" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🔄 Aktifkan Semula</button>`;
+        } else {
+            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">❌ Set Discontinued</button>`;
+        }
 
         return `
             <tr>
@@ -1339,9 +1349,53 @@ function filterAdminList(query) {
                 <td style="color: var(--danger-color); font-weight: bold;">${totalKeluar}</td>
                 <td style="color: var(--success-color); font-weight: bold;">${bakiSemasa}</td>
                 <td>${statusBadge}</td>
+                <td style="min-width: 120px;">${actionButtons}</td>
             </tr>
         `;
     }).join('');
 
     tbody.innerHTML = html;
+}
+
+function quickAddStock(id) {
+    switchTab('add_item');
+    document.getElementById('add-search').value = id;
+    filterUnifiedDropdown(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+        const qtyField = document.getElementById('add-qty');
+        if (qtyField) qtyField.focus();
+    }, 500);
+}
+
+async function confirmDiscontinue(id, name, isReactivate) {
+    const actionWord = isReactivate ? "MENGAKTIFKAN SEMULA" : "MENAMATKAN (DISCONTINUE)";
+    const newStatus = isReactivate ? "Active" : "Discontinued";
+    
+    if (confirm(`Adakah anda pasti untuk ${actionWord} barang ini?\n\n[${id}] - ${name}`)) {
+        document.getElementById('global-loader').style.display = 'flex';
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "toggleItemStatus",
+                    payload: {
+                        Item_ID: id,
+                        New_Status: newStatus
+                    }
+                })
+            });
+            const data = await response.json();
+            if (response.ok && data.status === 'success') {
+                showToast(data.message);
+                await fetchItems();
+            } else {
+                showErrorModal(data.message || 'Gagal mengubah status.');
+            }
+        } catch (e) {
+            showErrorModal('Ralat sambungan pelayan.');
+        } finally {
+            document.getElementById('global-loader').style.display = 'none';
+        }
+    }
 }
