@@ -437,8 +437,13 @@ tr:last-child td {
 }
 
 .badge-tambah {
-  background: #f2f3f4;
-  color: #7f8c8d;
+  background: #e8f4fd;
+  color: #2980b9;
+}
+
+.badge-daftar {
+  background: #3498db;
+  color: #ffffff;
 }
 
 .badge-ambil {
