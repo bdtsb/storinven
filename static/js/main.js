@@ -374,7 +374,7 @@ function showDropdown(prefix) {
     filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "") {
+function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "") {
     document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
     document.getElementById(`${prefix}-item-id`).value = id;
     document.getElementById(`${prefix}-item-name`).value = name;
@@ -419,6 +419,17 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
     }
 
+    const imgEl = document.getElementById(`${prefix}-item-image`);
+    if (imgEl) {
+        if (imageUrl && imageUrl.trim() !== "") {
+            imgEl.src = imageUrl;
+            imgEl.style.display = "block";
+        } else {
+            imgEl.style.display = "none";
+            imgEl.src = "";
+        }
+    }
+
     document.getElementById(`${prefix}-dropdown`).classList.remove('active');
 }
 
@@ -445,8 +456,9 @@ function filterDropdown(prefix, query) {
         const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
         const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}')">
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
         </div>`;
@@ -608,7 +620,7 @@ function filterSupplierDropdown(query) {
     let html = "";
     if (filtered.length === 0) {
         if (q.length > 0) {
-            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:default; background:white;">✨ Sentuh 'Sahkan Simpan Stok' untuk simpan pembekal baru ini.</div>`;
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer; background:white;" onclick="selectSupplier('${q.replace(/'/g, "\\'")}')">✨ Tekan di sini untuk tetapkan '${q}' sebagai pembekal baharu.</div>`;
         } else {
             html += `<div class="combo-item" style="color: var(--text-secondary); cursor:default; background:white;">Senarai pembekal kosong.</div>`;
         }
