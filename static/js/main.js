@@ -1023,6 +1023,65 @@ async function executeToggleItemStatus() {
     }
 }
 
+// --- Camera & Image Compression Logic ---
+function clearImage() {
+    document.getElementById('add-image').value = '';
+    document.getElementById('add-image-base64').value = '';
+    document.getElementById('image-preview-container').style.display = 'none';
+    document.getElementById('image-preview').src = '';
+}
+
+function handleImageSelection(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Sila pilih fail gambar sahaja.', 'error');
+        clearImage();
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            // Compress Image
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Export as medium quality JPEG
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            
+            // Set Hidden Field and Preview
+            document.getElementById('add-image-base64').value = dataUrl;
+            document.getElementById('image-preview').src = dataUrl;
+            document.getElementById('image-preview-container').style.display = 'block';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 // Handler for Unified Item Registration / Stok In
 async function handleUnifiedAdd(event) {
     event.preventDefault();
@@ -1040,6 +1099,7 @@ async function handleUnifiedAdd(event) {
         Item_Name: document.getElementById('add-name').value.trim(),
         Quantity: document.getElementById('add-qty').value,
         Remarks: document.getElementById('add-remarks').value,
+        Image_Data: document.getElementById('add-image-base64').value,
         Entered_By: currentUser,
         Staff_PIN: currentUserPin
     };
@@ -1075,6 +1135,7 @@ async function handleUnifiedAdd(event) {
         if (response.ok && data.status === 'success') {
             showToast(data.message);
             event.target.reset();
+            clearImage();
 
             // Re-enable fields that might have been disabled
             document.getElementById('add-name').readOnly = false;

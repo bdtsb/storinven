@@ -374,6 +374,27 @@
                         autocomplete="off">
                 </div>
 
+                <!-- Gambar Barang (Kamera) -->
+                <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #bdc3c7; text-align: center;">
+                    <label style="margin-bottom: 10px; display: block; font-weight: 600;">Gambar Barang (Pilihan)</label>
+                    
+                    <!-- Preview Box -->
+                    <div id="image-preview-container" style="display: none; margin-bottom: 15px;">
+                        <img id="image-preview" src="" alt="Pra-tonton" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <br>
+                        <button type="button" class="btn-cancel" onclick="clearImage()" style="margin-top: 10px; padding: 5px 15px; font-size: 0.8rem;">Buang Gambar</button>
+                    </div>
+
+                    <!-- Input Camera -->
+                    <label for="add-image" class="btn-submit" style="display: inline-block; background-color: #3498db; cursor: pointer; margin: 0; padding: 8px 20px;">
+                        📷 Ambil Gambar / Muat Naik
+                    </label>
+                    <input type="file" id="add-image" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelection(event)">
+                    
+                    <!-- Hidden field to store compressed base64 -->
+                    <input type="hidden" id="add-image-base64">
+                </div>
+
                 <!-- Hidden by JS if item already exists -->
                 <div id="new-item-fields">
                     <div class="form-group">
