@@ -456,11 +456,6 @@ tr:last-child td {
   color: #27ae60;
 }
 
-.badge-daftar {
-  background: #eafaf1;
-  color: #2980b9;
-}
-
 .badge-low {
   background: #fdedec;
   color: var(--danger-color);
