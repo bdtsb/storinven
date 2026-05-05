@@ -1399,3 +1399,399 @@ async function confirmDiscontinue(id, name, isReactivate) {
         }
     }
 }
+
+
+// ------------------------------------------------------------------
+// --- NEW WORKFLOW OVERRIDES & FUNCTIONS (ADDED VIA SCRIPT) ---
+// ------------------------------------------------------------------
+
+let activeBorrows = [];
+let pendingRequests = [];
+
+// Override switchTab to handle new tabs
+const originalSwitchTab = switchTab;
+window.switchTab = function(viewId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (window.event && window.event.target && window.event.target.classList.contains('tab-btn')) {
+        window.event.target.classList.add('active');
+    }
+    document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+    
+    const targetView = document.getElementById(`view-${viewId}`);
+    if(targetView) targetView.classList.add('active');
+
+    if (viewId === 'dashboard') {
+        fetchTransactions();
+        fetchItems();
+        fetch(`${SCRIPT_URL}?action=getStaff`)
+            .then(r => r.json())
+            .then(d => { if (d.status === 'success') staffList = d.data; })
+            .catch(() => { });
+    }
+    if (viewId === 'admin') renderAdminList();
+    if (viewId === 'approval') fetchPendingRequests();
+    if (viewId === 'return') fetchActiveBorrows();
+};
+
+// Override addToCart to include Due_Date
+window.addToCart = function(event, type) {
+    event.preventDefault();
+    let prefix = type === 'AMBIL' ? 'out' : 'ret';
+
+    const itemId = document.getElementById(`${prefix}-item-id`).value;
+    const itemName = document.getElementById(`${prefix}-item-name`).value;
+    const qty = parseInt(document.getElementById(`${prefix}-qty`).value);
+    const project = prefix === 'out' ? document.getElementById('out-project').value : '-';
+    const dueDate = prefix === 'out' && document.getElementById('out-due-date') ? document.getElementById('out-due-date').value : '';
+
+    if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
+
+    const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
+    if (prefix === 'out' && qty > maxStock) return showToast('Kuantiti ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
+
+    const serialGroup = document.getElementById(`${prefix}-serial-group`);
+    const serialSelect = document.getElementById(`${prefix}-serial`);
+    let selectedSerial = "";
+
+    if (serialGroup && serialGroup.style.display === "block") {
+        selectedSerial = serialSelect.value;
+        if (!selectedSerial) return showToast('Sila pilih Nombor Siri barangan ini!', 'warning');
+    }
+
+    const cartItem = {
+        Item_ID: itemId,
+        Item_Name: itemName,
+        Quantity: qty,
+        Type: type,
+        Project: project,
+        Selected_Serial: selectedSerial,
+        Due_Date: dueDate,
+        Remarks: ""
+    };
+
+    if (type === 'AMBIL') {
+        if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
+            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+        }
+        outCart.push(cartItem);
+        renderCart('AMBIL');
+        document.getElementById('out-search').value = "";
+        document.getElementById('out-item-id').value = "";
+        document.getElementById('out-qty').value = "";
+        document.getElementById('out-project').value = "";
+        if (document.getElementById('out-due-date')) document.getElementById('out-due-date').value = "";
+        if (serialGroup) serialGroup.style.display = "none";
+        document.getElementById('out-current-stock').innerHTML = "";
+    } else {
+        if (retCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
+            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+        }
+        retCart.push(cartItem);
+        renderCart('PULANG');
+        document.getElementById('ret-search').value = "";
+        document.getElementById('ret-item-id').value = "";
+        document.getElementById('ret-qty').value = "";
+        if (serialGroup) serialGroup.style.display = "none";
+        document.getElementById('ret-current-stock').innerHTML = "";
+    }
+};
+
+// Override unifiedAdd to include Attachment
+window.handleUnifiedAdd = async function(event) {
+    event.preventDefault();
+
+    const isNewItem = document.getElementById('add-item-id').value === '';
+    const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
+
+    if (!itemIdInput) {
+        showToast('Sila isikan ID Barang (Item ID)', 'error');
+        return;
+    }
+
+    const payload = {
+        Item_ID: itemIdInput,
+        Item_Name: toTitleCase(document.getElementById('add-name').value.trim()),
+        Quantity: document.getElementById('add-qty').value,
+        Remarks: toTitleCase(document.getElementById('add-remarks').value.trim()),
+        Supplier: toTitleCase(document.getElementById('add-remarks').value.trim()),
+        Image_Data: document.getElementById('add-image-base64') ? document.getElementById('add-image-base64').value : "",
+        Attachment_Data: document.getElementById('add-attachment-base64') ? document.getElementById('add-attachment-base64').value : "",
+        Entered_By: currentUser,
+        Staff_PIN: currentUserPin
+    };
+
+    const hasSerial = document.getElementById('add-has-serial');
+    if (hasSerial && hasSerial.checked) {
+        payload.Punya_Serial = true;
+        payload.Serial_Tersedia = document.getElementById('add-serials').value;
+    }
+
+    if (isNewItem) {
+        payload.Category = document.getElementById('add-category').value;
+        payload.Unit = document.getElementById('add-unit').value;
+        payload.Min_Stock = document.getElementById('add-min').value;
+
+        if (!payload.Category || !payload.Unit) {
+            showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
+            return;
+        }
+    } else {
+        if (!payload.Attachment_Data) {
+            // Optional but good to enforce DO for restock if requested
+            // showToast('Sila muat naik Invois / D.O untuk restock.', 'error');
+            // return;
+        }
+    }
+
+    document.getElementById('global-loader').style.display = 'flex';
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "unifiedAdd", payload: payload })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+            showToast(data.message);
+            event.target.reset();
+            clearImage();
+            if(typeof clearAttachment === 'function') clearAttachment();
+
+            document.getElementById('add-name').readOnly = false;
+            document.getElementById('add-name').style.backgroundColor = 'white';
+            document.getElementById('new-item-fields').style.display = 'block';
+            document.getElementById('new-item-threshold').style.display = 'block';
+            document.getElementById('add-item-id').value = '';
+            document.getElementById('add-status').innerHTML = '';
+
+            await fetchItems();
+            await fetchTransactions();
+
+            setTimeout(() => { switchTab('dashboard'); }, 1500);
+        } else {
+            showErrorModal(data.message || 'Gagal menyimpan transaksi.');
+        }
+    } catch (e) {
+        showErrorModal('Ralat sambungan pelayan.');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+};
+
+// Override Login to show Approval Tab
+const originalSubmitLogin = submitLogin;
+window.submitLogin = async function() {
+    await originalSubmitLogin();
+    if (isAdmin) {
+        document.getElementById('btn-tab-approval').style.display = 'inline-block';
+    }
+};
+
+// D.O Attachment Logic
+window.clearAttachment = function() {
+    document.getElementById('add-attachment').value = '';
+    document.getElementById('add-attachment-base64').value = '';
+    document.getElementById('attachment-preview-container').style.display = 'none';
+    document.getElementById('attachment-preview').src = '';
+};
+
+window.handleAttachmentSelection = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Buat masa ini, sila muat naik format Gambar (JPG/PNG) sahaja untuk D.O.', 'error');
+        clearAttachment();
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            document.getElementById('add-attachment-base64').value = dataUrl;
+            document.getElementById('attachment-preview').src = dataUrl;
+            document.getElementById('attachment-preview-container').style.display = 'block';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+// --- APPROVAL LOGIC ---
+async function fetchPendingRequests() {
+    document.getElementById('global-loader').style.display = 'flex';
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getPendingRequests`);
+        const data = await res.json();
+        if (data.status === 'success') {
+            pendingRequests = data.data;
+            renderApprovalList();
+        }
+    } catch(e) {
+        showToast('Ralat memuatkan permohonan', 'error');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+}
+
+function renderApprovalList() {
+    const tbody = document.querySelector('#admin-approval-table tbody');
+    if (!tbody) return;
+    
+    if (pendingRequests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = pendingRequests.map(r => {
+        let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
+        return `
+            <tr>
+                <td style="font-size:0.75rem;">${r.Timestamp}</td>
+                <td><strong>${r.Entered_By}</strong></td>
+                <td><span class="badge" style="background:${typeColor}">${r.Type}</span></td>
+                <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
+                <td>${r.Quantity} <br><small>${r.Selected_Serial || ''}</small></td>
+                <td>
+                    <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Lulus</button>
+                    <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Tolak</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.processRequest = async function(reqId, action) {
+    if (!confirm(`Adakah anda pasti mahu ${action === 'approve' ? 'MELULUSKAN' : 'MENOLAK'} permohonan ini?`)) return;
+    
+    document.getElementById('global-loader').style.display = 'flex';
+    try {
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: action === 'approve' ? 'approveRequest' : 'rejectRequest',
+                payload: { Req_ID: reqId, Admin_Name: currentUser, Admin_PIN: currentUserPin }
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            showToast(data.message, 'success');
+            if (data.pdf_url) {
+                // Open PDF Request form in new tab
+                window.open(data.pdf_url, '_blank');
+            }
+            await fetchPendingRequests();
+            await fetchItems();
+        } else {
+            showErrorModal(data.message);
+        }
+    } catch(e) {
+        showErrorModal('Ralat pelayan.');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+};
+
+// --- ACTIVE BORROWS LOGIC (For Return Binding) ---
+async function fetchActiveBorrows() {
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getActiveBorrows&staffName=${encodeURIComponent(currentUser)}`);
+        const data = await res.json();
+        if (data.status === 'success') {
+            activeBorrows = data.data;
+        }
+    } catch(e) {}
+}
+
+// Override selectItem & filterDropdown for RETURN so it uses activeBorrows instead of masterItems
+window.filterDropdown = function(prefix, query) {
+    const q = query.toLowerCase();
+    const dropdown = document.getElementById(`${prefix}-dropdown`);
+
+    let matched = [];
+    if (prefix === 'ret') {
+        // Only show items user has borrowed
+        const uniqueBorrowsMap = {};
+        activeBorrows.forEach(b => {
+            if(!uniqueBorrowsMap[b.Item_ID]) {
+                uniqueBorrowsMap[b.Item_ID] = {
+                    Item_ID: b.Item_ID,
+                    Item_Name: b.Item_Name,
+                    Current_Stock: b.Qty_Borrowed,
+                    Unit: 'Unit',
+                    Total_Quantity: b.Qty_Borrowed, // Max return = Qty Borrowed
+                    Punya_Serial: b.Selected_Serial ? "YA" : "TIDAK",
+                    Serial_Tersedia: "", // Not returning to pool, we are listing what they borrowed
+                    Serial_Dipinjam: b.Selected_Serial || "",
+                    Image_URL: ""
+                };
+            } else {
+                uniqueBorrowsMap[b.Item_ID].Current_Stock += b.Qty_Borrowed;
+                uniqueBorrowsMap[b.Item_ID].Total_Quantity += b.Qty_Borrowed;
+                if(b.Selected_Serial) {
+                    uniqueBorrowsMap[b.Item_ID].Serial_Dipinjam += (uniqueBorrowsMap[b.Item_ID].Serial_Dipinjam ? ", " : "") + b.Selected_Serial;
+                }
+            }
+        });
+        matched = Object.values(uniqueBorrowsMap).filter(item => {
+            return String(item.Item_ID).toLowerCase().includes(q) || String(item.Item_Name).toLowerCase().includes(q);
+        });
+        
+        if (matched.length === 0) {
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada rekod peminjaman aktif untuk anda.</div>';
+            return;
+        }
+    } else {
+        // Original Master Items Logic for Out
+        matched = masterItems.filter(item => {
+            if (item.Status === 'Discontinued') return false;
+            return String(item.Item_ID).toLowerCase().includes(q) || String(item.Item_Name).toLowerCase().includes(q);
+        });
+        
+        if (matched.length === 0) {
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item dijumpai</div>';
+            return;
+        }
+    }
+
+    const displayLimit = 50;
+    let html = matched.slice(0, displayLimit).map(item => {
+        const safeName = (item.Item_Name || "").replace(/'/g, "\'");
+        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
+        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
+        const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
+        const imageUrl = (item.Image_URL || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
+        
+        let stockLabel = prefix === 'ret' ? "Hutang Pinjaman" : "Stok";
+
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}')">
+            <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
+            <small style="color:var(--text-secondary)">${stockLabel}: ${item.Current_Stock || 0} ${item.Unit}</small>
+        </div>`;
+    }).join('');
+
+    if (matched.length > displayLimit) html += `<div class="combo-item" style="text-align:center;">... lagi.</div>`;
+    dropdown.innerHTML = html;
+};
+

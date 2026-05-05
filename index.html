@@ -74,6 +74,8 @@
             <button class="tab-btn tab-profil" onclick="switchTab('profile')">Profil</button>
             <button class="tab-btn tab-admin" id="btn-tab-admin" onclick="switchTab('admin')"
                 style="display:none;">Admin Akses</button>
+            <button class="tab-btn tab-admin" id="btn-tab-approval" onclick="switchTab('approval')"
+                style="display:none; background-color: #e67e22;">Kelulusan</button>
         </div>
 
         <!-- Dashboard View -->
@@ -183,6 +185,10 @@
                 <div class="form-group">
                     <label>Nama Projek</label>
                     <input type="text" id="out-project" required placeholder="Untuk kegunaan projek mana?">
+                </div>
+                <div class="form-group">
+                    <label>Tarikh Jangkaan Pemulangan</label>
+                    <input type="date" id="out-due-date" required>
                 </div>
 
                 <div class="form-group">
@@ -327,6 +333,31 @@
             </div>
         </div>
 
+        <!-- Approval View -->
+        <div id="view-approval" class="view-section">
+            <h2 class="section-title">Permohonan Menunggu Kelulusan</h2>
+            <div class="table-responsive"
+                style="max-height: 400px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
+                <table id="admin-approval-table">
+                    <thead>
+                        <tr>
+                            <th>Masa</th>
+                            <th>Pemohon</th>
+                            <th>Jenis</th>
+                            <th>Barang</th>
+                            <th>Kuantiti / S/N</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6" style="text-align:center;">Memuatkan...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Admin View & Master List -->
         <div id="view-admin" class="view-section">
             <h2 class="section-title">Senarai Keseluruhan Barang (Master List)</h2>
@@ -379,6 +410,24 @@
                         autocomplete="off">
                 </div>
 
+                <!-- Muat Naik D.O / Invois -->
+                <div class="form-group" style="background: #fdf2e9; padding: 15px; border-radius: 8px; border: 1px dashed #e67e22; text-align: center; margin-bottom: 15px;">
+                    <label style="margin-bottom: 10px; display: block; font-weight: 600; color: #d35400;">Muat Naik Invois / D.O (Wajib untuk Restock)</label>
+                    
+                    <div id="attachment-preview-container" style="display: none; margin-bottom: 15px;">
+                        <img id="attachment-preview" src="" alt="Pra-tonton D.O" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <br>
+                        <button type="button" class="btn-cancel" onclick="clearAttachment()" style="margin-top: 10px; padding: 5px 15px; font-size: 0.8rem;">Buang Dokumen</button>
+                    </div>
+
+                    <label for="add-attachment" class="btn-submit" style="display: inline-block; background-color: #e67e22; cursor: pointer; margin: 0; padding: 8px 20px;">
+                        📄 Pilih Fail Gambar (Invois/D.O)
+                    </label>
+                    <input type="file" id="add-attachment" accept="image/*" style="display: none;" onchange="handleAttachmentSelection(event)">
+                    
+                    <input type="hidden" id="add-attachment-base64">
+                </div>
+                
                 <!-- Gambar Barang (Kamera) -->
                 <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #bdc3c7; text-align: center;">
                     <label style="margin-bottom: 10px; display: block; font-weight: 600;">Gambar Barang (Pilihan)</label>
@@ -401,6 +450,23 @@
                 </div>
 
                 <!-- Hidden by JS if item already exists -->
+                <div id="new-item-serial"
+                        style="margin-top: 15px; background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22;">
+                        <label
+                            style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 0;">
+                            <input type="checkbox" id="add-has-serial"
+                                onchange="document.getElementById('serial-input-container').style.display = this.checked ? 'block' : 'none';"
+                                style="width: 20px; height: 20px;">
+                            <span style="font-weight: bold; color: #d35400;">Bekalan Aset / Peralatan Bernombor
+                                Siri?</span>
+                        </label>
+                        <div id="serial-input-container" style="display: none; margin-top: 10px;">
+                            <label>Senaraikan Nombor Siri Didaftarkan (Pisahkan dengan koma ',')</label>
+                            <textarea id="add-serials" placeholder="Cth: SN001, SN002, JKR003..."
+                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; resize: vertical; min-height: 80px;"></textarea>
+                        </div>
+                    </div>
+
                 <div id="new-item-fields">
                     <div class="form-group">
                         <label>Kategori</label>
@@ -430,22 +496,7 @@
                         </select>
                     </div>
 
-                    <div id="new-item-serial"
-                        style="margin-top: 15px; background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22;">
-                        <label
-                            style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 0;">
-                            <input type="checkbox" id="add-has-serial"
-                                onchange="document.getElementById('serial-input-container').style.display = this.checked ? 'block' : 'none';"
-                                style="width: 20px; height: 20px;">
-                            <span style="font-weight: bold; color: #d35400;">Bekalan Aset / Peralatan Bernombor
-                                Siri?</span>
-                        </label>
-                        <div id="serial-input-container" style="display: none; margin-top: 10px;">
-                            <label>Senaraikan Nombor Siri Didaftarkan (Pisahkan dengan koma ',')</label>
-                            <textarea id="add-serials" placeholder="Cth: SN001, SN002, JKR003..."
-                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; resize: vertical; min-height: 80px;"></textarea>
-                        </div>
-                    </div>
+                    
 
                 </div>
 
