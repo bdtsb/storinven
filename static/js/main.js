@@ -1795,3 +1795,269 @@ window.filterDropdown = function(prefix, query) {
     dropdown.innerHTML = html;
 };
 
+
+
+// ------------------------------------------------------------------
+// --- SIGNATURE PAD & PDF LOGIC (ADDED VIA SCRIPT) ---
+// ------------------------------------------------------------------
+
+let isDrawing = false;
+let canvasCtx = null;
+let currentSignatureAction = null; // { type: 'submitCart'|'processRequest', payload: any }
+let currentSignaturePrefix = '';
+
+function initSignaturePad() {
+    const canvas = document.getElementById('signature-pad');
+    if (!canvas) return;
+    canvasCtx = canvas.getContext('2d');
+    
+    // Clear canvas white background
+    canvasCtx.fillStyle = '#ffffff';
+    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    canvasCtx.strokeStyle = '#000000';
+    canvasCtx.lineWidth = 3;
+    canvasCtx.lineCap = 'round';
+
+    const startPosition = (e) => {
+        isDrawing = true;
+        draw(e);
+    };
+
+    const endPosition = () => {
+        isDrawing = false;
+        canvasCtx.beginPath();
+    };
+
+    const draw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        
+        let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+
+        canvasCtx.lineTo(x, y);
+        canvasCtx.stroke();
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(x, y);
+    };
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+    
+    canvas.addEventListener('touchstart', startPosition, { passive: false });
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+}
+
+window.clearSignature = function() {
+    if(!canvasCtx) return;
+    const canvas = document.getElementById('signature-pad');
+    canvasCtx.fillStyle = '#ffffff';
+    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+};
+
+window.closeSignatureModal = function() {
+    document.getElementById('signature-modal').style.display = 'none';
+    currentSignatureAction = null;
+};
+
+// Hook the save button
+document.addEventListener('DOMContentLoaded', () => {
+    initSignaturePad();
+    const btnSaveSig = document.getElementById('btn-save-signature');
+    if(btnSaveSig) {
+        btnSaveSig.addEventListener('click', async () => {
+            const canvas = document.getElementById('signature-pad');
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.5); // compress signature
+            
+            // Check if blank (rough check if it's mostly white)
+            // But we'll trust user for now
+            
+            const action = currentSignatureAction;
+            closeSignatureModal();
+            
+            if (action.type === 'submitCart') {
+                await doActualSubmitCart(action.payload, dataUrl);
+            } else if (action.type === 'processRequest') {
+                await doActualProcessRequest(action.payload, dataUrl);
+            }
+        });
+    }
+});
+
+
+// Override submitCart to prompt for signature first
+window.submitCart = function(type) {
+    let cart = type === 'AMBIL' ? outCart : retCart;
+    if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
+
+    const staffName = document.getElementById('login-user').value || currentUser;
+    if (!staffName) return showToast('Sila log masuk dahulu!', 'error');
+
+    currentSignatureAction = { type: 'submitCart', payload: type };
+    
+    document.getElementById('signature-title').innerText = "Tandatangan Pemohon";
+    document.getElementById('signature-desc').innerText = "Sila tandatangan pengesahan untuk permohonan ini.";
+    clearSignature();
+    document.getElementById('signature-modal').style.display = 'flex';
+};
+
+// Actual Submission
+async function doActualSubmitCart(type, sigBase64) {
+    let cart = type === 'AMBIL' ? outCart : retCart;
+    const staffName = document.getElementById('login-user').value || currentUser;
+    const staffPin = document.getElementById('login-pin').value || currentUserPin;
+
+    document.getElementById('global-loader').style.display = 'flex';
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'submitBatchTransactions',
+                payload: {
+                    Entered_By: staffName,
+                    Staff_PIN: staffPin,
+                    transactions: cart,
+                    Requester_Signature: sigBase64
+                }
+            })
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+            showToast(data.message, 'success');
+            if (type === 'AMBIL') {
+                outCart = [];
+                renderCart('AMBIL');
+                document.getElementById('out-project').value = "";
+            } else {
+                retCart = [];
+                renderCart('PULANG');
+            }
+            await fetchItems();
+            await fetchTransactions();
+            setTimeout(() => switchTab('dashboard'), 1500);
+        } else {
+            showErrorModal(data.message || 'Ralat menyimpan permohonan.');
+        }
+    } catch (error) {
+        showErrorModal('Ralat sambungan rangkaian: ' + error.message);
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+}
+
+// Override processRequest to prompt for signature on APPROVE
+window.processRequest = async function(reqId, actionStr) {
+    if (actionStr === 'reject') {
+        if (!confirm('Adakah anda pasti mahu MENOLAK permohonan ini?')) return;
+        await doActualProcessRequest({ reqId, actionStr }, null);
+        return;
+    }
+    
+    // If approve, request signature
+    currentSignatureAction = { type: 'processRequest', payload: { reqId, actionStr } };
+    document.getElementById('signature-title').innerText = "Tandatangan Pelulus (Admin)";
+    document.getElementById('signature-desc').innerText = "Sila sahkan kelulusan permohonan ini.";
+    clearSignature();
+    document.getElementById('signature-modal').style.display = 'flex';
+};
+
+async function doActualProcessRequest(payloadObj, sigBase64) {
+    const { reqId, actionStr } = payloadObj;
+    
+    document.getElementById('global-loader').style.display = 'flex';
+    try {
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: actionStr === 'approve' ? 'approveRequest' : 'rejectRequest',
+                payload: { 
+                    Req_ID: reqId, 
+                    Admin_Name: currentUser, 
+                    Admin_PIN: currentUserPin,
+                    Approver_Signature: sigBase64 
+                }
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            showToast(data.message, 'success');
+            if (data.pdf_url) {
+                window.open(data.pdf_url, '_blank');
+            }
+            await fetchPendingRequests();
+            await fetchItems();
+            await fetchTransactions(); // Update profile history
+        } else {
+            showErrorModal(data.message);
+        }
+    } catch(e) {
+        showErrorModal('Ralat pelayan.');
+    } finally {
+        document.getElementById('global-loader').style.display = 'none';
+    }
+}
+
+// Override Profile Render to show PDF Download Button
+window.renderProfileHistory = function(sortedTransactions) {
+    try {
+        const tbody = document.querySelector('#profile-trans-table tbody');
+        if (!tbody) return;
+
+        const nameDisplay = document.getElementById('profile-name-display');
+        if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
+
+        const personalTrans = sortedTransactions || (allTransactions ? allTransactions.filter(t => t && t.Entered_By === currentUser) : []);
+
+        const statsDisplay = document.getElementById('profile-stats-display');
+        if (statsDisplay && allTransactions) {
+            statsDisplay.innerText = `Anda merekodkan ${personalTrans.length} unit transaksi setakat ini.`;
+        }
+
+        if (!personalTrans || personalTrans.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = personalTrans.map(t => {
+            if (!t) return '';
+            let badgeClass = 'badge-tambah';
+            let typeDisplay = 'TAMBAH';
+            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            
+            // PDF URL is index 9 (or accessible via t.PDF_URL)
+            let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">Muat Turun PDF</button>` : '-';
+
+            return `
+            <tr>
+                <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+                <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
+                <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
+                <td><strong>${t.Quantity || 0}</strong></td>
+                <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
+                <td style="text-align: center;">${pdfBtn}</td>
+            </tr>
+        `}).join('');
+    } catch (err) {
+        console.error("Profile Trans Render Error:", err);
+        const tbody = document.querySelector('#profile-trans-table tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Ralat memuatkan profil. Sila *refresh*.</td></tr>`;
+    }
+};
+
+// Execute init on load if it's already DOMContentLoaded
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    setTimeout(initSignaturePad, 100);
+}
