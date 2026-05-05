@@ -2049,7 +2049,7 @@ window.renderProfileHistory = async function() {
 
         return `
         <tr>
-            <td style="font-size: 0.75rem; white-space: nowrap;">${t.Timestamp}</td>
+            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${t.Type}</span></td>
             <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
             <td><strong>${t.Quantity || 0}</strong></td>
