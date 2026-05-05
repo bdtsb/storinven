@@ -1431,6 +1431,7 @@ window.switchTab = function(viewId) {
     if (viewId === 'admin') renderAdminList();
     if (viewId === 'approval') fetchPendingRequests();
     if (viewId === 'return') fetchActiveBorrows();
+    if (viewId === 'profile') renderProfileHistory();
 };
 
 // Override addToCart to include Due_Date
@@ -1978,55 +1979,63 @@ async function doActualProcessRequest(payloadObj, sigBase64) {
 }
 
 // Override Profile Render to show PDF Download Button
-window.renderProfileHistory = function(sortedTransactions) {
+window.renderProfileHistory = async function() {
+    // Fetch user's pending requests first
+    document.getElementById('global-loader').style.display = 'flex';
     try {
-        const tbody = document.querySelector('#profile-trans-table tbody');
-        if (!tbody) return;
-
-        const nameDisplay = document.getElementById('profile-name-display');
-        if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
-
-        const personalTrans = sortedTransactions || (allTransactions ? allTransactions.filter(t => t && t.Entered_By === currentUser) : []);
-
-        const statsDisplay = document.getElementById('profile-stats-display');
-        if (statsDisplay && allTransactions) {
-            statsDisplay.innerText = `Anda merekodkan ${personalTrans.length} unit transaksi setakat ini.`;
+        const res = await fetch(`${SCRIPT_URL}?action=getPendingRequests`);
+        const data = await res.json();
+        if (data.status === 'success') {
+            pendingRequests = data.data;
         }
+    } catch(e) {}
+    document.getElementById('global-loader').style.display = 'none';
 
-        if (!personalTrans || personalTrans.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
-            return;
-        }
+    const tbody = document.querySelector('#profile-trans-table tbody');
+    if (!tbody) return;
 
-        tbody.innerHTML = personalTrans.map(t => {
-            if (!t) return '';
-            let badgeClass = 'badge-tambah';
-            let typeDisplay = 'TAMBAH';
-            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
-            
-            // PDF URL is index 9 (or accessible via t.PDF_URL)
-            let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">Muat Turun PDF</button>` : '-';
+    const nameDisplay = document.getElementById('profile-name-display');
+    if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
 
-            return `
-            <tr>
-                <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
-                <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
-                <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
-                <td><strong>${t.Quantity || 0}</strong></td>
-                <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
-                <td style="text-align: center;">${pdfBtn}</td>
-            </tr>
-        `}).join('');
-    } catch (err) {
-        console.error("Profile Trans Render Error:", err);
-        const tbody = document.querySelector('#profile-trans-table tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Ralat memuatkan profil. Sila *refresh*.</td></tr>`;
+    const personalReqs = pendingRequests.filter(r => r.Entered_By === currentUser);
+
+    const statsDisplay = document.getElementById('profile-stats-display');
+    if (statsDisplay) {
+        statsDisplay.innerText = `Anda mempunyai ${personalReqs.length} rekod permohonan setakat ini.`;
     }
-};
 
+    if (!personalReqs || personalReqs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod permohonan peribadi.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = personalReqs.reverse().map(t => {
+        if (!t) return '';
+        let badgeClass = 'badge-tambah';
+        if (t.Type === 'AMBIL') badgeClass = 'badge-ambil';
+        if (t.Type === 'PULANG') badgeClass = 'badge-pulang';
+        
+        let statusColor = '#f39c12'; // Pending
+        let statusText = 'Sedar Mengurus';
+        if (t.Status === 'Approved') { statusColor = '#27ae60'; statusText = 'Lulus'; }
+        if (t.Status === 'Rejected') { statusColor = '#c0392b'; statusText = 'Ditolak'; }
+        if (t.Status === 'Pending') { statusText = 'Dalam Proses'; }
+        
+        let statusBadge = `<span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem;">${statusText}</span>`;
+        
+        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">PDF</button>` : '-';
+
+        return `
+        <tr>
+            <td style="font-size: 0.75rem; white-space: nowrap;">${t.Timestamp}</td>
+            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${t.Type}</span></td>
+            <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
+            <td><strong>${t.Quantity || 0}</strong></td>
+            <td style="text-align: center;">${statusBadge}</td>
+            <td style="text-align: center;">${pdfBtn}</td>
+        </tr>
+    `}).join('');
+};
 // Execute init on load if it's already DOMContentLoaded
 if (document.readyState === "complete" || document.readyState === "interactive") {
     setTimeout(initSignaturePad, 100);
