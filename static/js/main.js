@@ -1682,36 +1682,6 @@ function renderApprovalList() {
     }).join('');
 }
 
-window.processRequest = async function(reqId, action) {
-    if (!confirm(`Adakah anda pasti mahu ${action === 'approve' ? 'MELULUSKAN' : 'MENOLAK'} permohonan ini?`)) return;
-    
-    document.getElementById('global-loader').style.display = 'flex';
-    try {
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: action === 'approve' ? 'approveRequest' : 'rejectRequest',
-                payload: { Req_ID: reqId, Admin_Name: currentUser, Admin_PIN: currentUserPin }
-            })
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-            showToast(data.message, 'success');
-            if (data.pdf_url) {
-                // Open PDF Request form in new tab
-                window.open(data.pdf_url, '_blank');
-            }
-            await fetchPendingRequests();
-            await fetchItems();
-        } else {
-            showErrorModal(data.message);
-        }
-    } catch(e) {
-        showErrorModal('Ralat pelayan.');
-    } finally {
-        document.getElementById('global-loader').style.display = 'none';
-    }
-};
 
 // --- ACTIVE BORROWS LOGIC (For Return Binding) ---
 async function fetchActiveBorrows() {
