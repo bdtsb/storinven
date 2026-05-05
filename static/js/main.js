@@ -1980,7 +1980,6 @@ async function doActualProcessRequest(payloadObj, sigBase64) {
 
 // Override Profile Render to show PDF Download Button
 window.renderProfileHistory = async function() {
-    // Fetch user's pending requests first
     document.getElementById('global-loader').style.display = 'flex';
     try {
         const res = await fetch(`${SCRIPT_URL}?action=getPendingRequests`);
@@ -1997,33 +1996,56 @@ window.renderProfileHistory = async function() {
     const nameDisplay = document.getElementById('profile-name-display');
     if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
 
-    const personalReqs = pendingRequests.filter(r => r.Entered_By === currentUser);
+    // 1. Get user's pending requests
+    const personalReqs = (pendingRequests || []).filter(r => r && r.Entered_By && r.Entered_By.trim() === currentUser.trim());
+    
+    // 2. Get user's direct transactions (legacy AMBIL/PULANG, or DAFTAR/TAMBAH)
+    const personalTrans = (allTransactions || []).filter(t => t && t.Entered_By && t.Entered_By.trim() === currentUser.trim());
+
+    // 3. Merge them without duplicates
+    let merged = [...personalReqs];
+    personalTrans.forEach(t => {
+        const exists = personalReqs.find(p => p.Timestamp === t.Timestamp && p.Item_ID === t.Item_ID);
+        if (!exists) {
+            // It's a direct transaction
+            let mockStatus = 'Lulus (Rekod Lama)';
+            if (t.Type === 'DAFTAR' || t.Type === 'TAMBAH') mockStatus = 'Selesai';
+            t.Status = mockStatus;
+            merged.push(t);
+        }
+    });
 
     const statsDisplay = document.getElementById('profile-stats-display');
     if (statsDisplay) {
-        statsDisplay.innerText = `Anda mempunyai ${personalReqs.length} rekod permohonan setakat ini.`;
+        statsDisplay.innerText = `Anda mempunyai ${merged.length} rekod transaksi setakat ini.`;
     }
 
-    if (!personalReqs || personalReqs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod permohonan peribadi.</td></tr>';
+    if (!merged || merged.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod permohonan peribadi.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = personalReqs.reverse().map(t => {
+    // Since we merged, the order might be slightly off. We will reverse it so newest is at the top.
+    // In Google Sheets, newer rows are at the bottom, so reversing it puts newest at top.
+    merged.reverse();
+
+    tbody.innerHTML = merged.map(t => {
         if (!t) return '';
         let badgeClass = 'badge-tambah';
         if (t.Type === 'AMBIL') badgeClass = 'badge-ambil';
         if (t.Type === 'PULANG') badgeClass = 'badge-pulang';
+        if (t.Type === 'DAFTAR') badgeClass = 'badge-daftar';
         
         let statusColor = '#f39c12'; // Pending
-        let statusText = 'Sedar Mengurus';
+        let statusText = 'Dalam Proses';
+        
         if (t.Status === 'Approved') { statusColor = '#27ae60'; statusText = 'Lulus'; }
-        if (t.Status === 'Rejected') { statusColor = '#c0392b'; statusText = 'Ditolak'; }
-        if (t.Status === 'Pending') { statusText = 'Dalam Proses'; }
+        else if (t.Status === 'Rejected') { statusColor = '#c0392b'; statusText = 'Ditolak'; }
+        else if (t.Status && t.Status !== 'Pending') { statusColor = '#2980b9'; statusText = t.Status; }
         
-        let statusBadge = `<span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem;">${statusText}</span>`;
+        let statusBadge = `<span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span>`;
         
-        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">PDF</button>` : '-';
+        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">Cetak</button>` : '-';
 
         return `
         <tr>
@@ -2031,6 +2053,7 @@ window.renderProfileHistory = async function() {
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${t.Type}</span></td>
             <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
             <td><strong>${t.Quantity || 0}</strong></td>
+            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
             <td style="text-align: center;">${statusBadge}</td>
             <td style="text-align: center;">${pdfBtn}</td>
         </tr>
