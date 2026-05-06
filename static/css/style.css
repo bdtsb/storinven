@@ -162,7 +162,7 @@ header {
   transition: all 0.2s;
   white-space: nowrap;
   font-size: var(--font-caption);
-  flex: 1;
+  flex: 0 0 auto;
   text-align: center;
 }
 
@@ -335,6 +335,7 @@ label {
 input[type="text"],
 input[type="number"],
 input[type="password"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
@@ -353,6 +354,7 @@ textarea {
 input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="password"]:focus,
+input[type="date"]:focus,
 select:focus,
 textarea:focus {
   border-color: var(--primary-color);
@@ -607,9 +609,9 @@ tr:last-child td {
 
   th,
   td {
-    padding: 0.4rem 0.2rem;
-    font-size: 0.75rem;
-    word-break: break-word;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   th {
