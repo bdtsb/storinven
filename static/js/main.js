@@ -1,5 +1,5 @@
 // PLEASE REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCFY9S47tGGG450vY81ZjbyF2C6ZM8GPAKsVxftBWrbaZpONFuZ0FZDaLQyVfX2BIOsg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHuWP1biziUyX7hhPgv-4n6D41-WZ9p55SHsFuy6JJ1ycxGe_ZNm0GQSFpaDWEhJiUnw/exec';
 
 let masterItems = [];
 let staffList = [];
