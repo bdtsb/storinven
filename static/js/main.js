@@ -869,7 +869,8 @@ async function submitLogin() {
 
             // Show admin tab if authorized
             if (isAdmin) {
-                document.getElementById('btn-tab-admin').style.display = 'inline-block';
+                if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
+                if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
             }
 
             // Save to localStorage
