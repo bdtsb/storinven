@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="./static/img/icon.png">
     <link rel="apple-touch-icon" href="./static/img/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./static/css/style.css?v=7">
+    <link rel="stylesheet" href="./static/css/style.css?v=8">
 </head>
 
 <body>
@@ -103,39 +103,46 @@
         <div id="view-dashboard" class="view-section active">
             <h2 class="section-title">Ringkasan</h2>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">Jumlah Item Diuruskan</div>
-                    <div class="stat-value" id="stat-total-items">0</div>
+            <div class="dashboard-top-section">
+                <!-- Kiri: Stats -->
+                <div class="dashboard-stats-column">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Jumlah Item Diuruskan</div>
+                            <div class="stat-value" id="stat-total-items">0</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-title">Amaran Stok Rendah</div>
+                            <div class="stat-value" id="stat-low-stock">0</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: var(--success-color);">
+                            <div class="stat-title">Jumlah Rekod Transaksi</div>
+                            <div class="stat-value" id="stat-total-logs">0</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card warning">
-                    <div class="stat-title">Amaran Stok Rendah</div>
-                    <div class="stat-value" id="stat-low-stock">0</div>
-                </div>
-                <div class="stat-card" style="border-left-color: var(--success-color);">
-                    <div class="stat-title">Jumlah Rekod Transaksi</div>
-                    <div class="stat-value" id="stat-total-logs">0</div>
-                </div>
-            </div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">Amaran
-                Stok Rendah (Barang Hampir Habis)</h3>
-            <div class="table-responsive">
-                <table id="low-stock-table">
-                    <thead>
-                        <tr>
-                            <th>ID Barang</th>
-                            <th>Nama Barang</th>
-                            <th>Stok Semasa</th>
-                            <th>Had Amaran Stok</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="4" style="text-align:center;">Memuatkan...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Kanan: Low Stock Table -->
+                <div class="dashboard-table-column">
+                    <h3 style="color: var(--text-secondary);">Amaran Stok Rendah (Barang Hampir Habis)</h3>
+                    <div class="table-responsive">
+                        <table id="low-stock-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Barang</th>
+                                    <th>Nama Barang</th>
+                                    <th>Stok Semasa</th>
+                                    <th>Had Amaran Stok</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" style="text-align:center;">Memuatkan...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div
@@ -686,7 +693,7 @@
 
     <div id="toast">Message goes here</div>
 
-    <script src="./static/js/main.js?v=7"></script>
+    <script src="./static/js/main.js?v=8"></script>
 </body>
 
 </html>

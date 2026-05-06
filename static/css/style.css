@@ -286,6 +286,67 @@ header {
   }
 }
 
+/* Side-by-side Dashboard Top Section */
+.dashboard-top-section {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: stretch;
+}
+
+.dashboard-stats-column {
+  flex: 0 0 35%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-table-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevents flex blowout on mobile */
+}
+
+/* Make stats stack vertically inside this column regardless of device */
+.dashboard-stats-column .stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Adjust stat card text size for mobile side-by-side */
+.dashboard-stats-column .stat-card {
+  padding: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.dashboard-stats-column .stat-title {
+  font-size: 0.65rem;
+  line-height: 1.1;
+}
+
+.dashboard-stats-column .stat-value {
+  font-size: 1rem;
+}
+
+.dashboard-table-column h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.dashboard-table-column .table-responsive {
+  margin-bottom: 0;
+  flex: 1;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
 .stat-card {
   background: #f8fbff;
   border-left: 4px solid var(--primary-color);
