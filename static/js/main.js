@@ -381,7 +381,7 @@ function showDropdown(prefix) {
     filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "") {
+function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "", perluPulang = "YA") {
     document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
     document.getElementById(`${prefix}-item-id`).value = id;
     document.getElementById(`${prefix}-item-name`).value = name;
@@ -415,6 +415,22 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         qtyInput.readOnly = false;
     }
 
+    // Show/hide due date group based on Perlu_Pulang setting
+    if (prefix === 'out') {
+        const dueDateGroup = document.getElementById('out-due-date-group');
+        const dueDateInput = document.getElementById('out-due-date');
+        if (dueDateGroup && dueDateInput) {
+            if (String(perluPulang).trim().toUpperCase() === 'YA') {
+                dueDateGroup.style.display = 'block';
+                dueDateInput.required = true;
+            } else {
+                dueDateGroup.style.display = 'none';
+                dueDateInput.required = false;
+                dueDateInput.value = '';
+            }
+        }
+    }
+
     // Set max quantity for stock out
     if (prefix === 'out') {
         qtyInput.max = stock;
@@ -433,6 +449,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
             // Convert standard Drive link or old uc link to reliable Thumbnail API link
             if (finalUrl.includes("drive.google.com/file/d/")) {
                 const match = finalUrl.match(/\/d\/(.*?)\//);
+
                 if (match && match[1]) {
                     finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
                 }
@@ -477,8 +494,9 @@ function filterDropdown(prefix, query) {
         const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const perluPulang = (item.Perlu_Pulang || "YA").trim().toUpperCase();
 
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}')">
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')">
             <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
             <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
         </div>`;
@@ -1157,6 +1175,9 @@ async function handleUnifiedAdd(event) {
         payload.Category = document.getElementById('add-category').value;
         payload.Unit = document.getElementById('add-unit').value;
         payload.Min_Stock = document.getElementById('add-min').value;
+        // Get Perlu_Pulang from radio buttons
+        const perluPulangEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
+        payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'TIDAK';
 
         if (!payload.Category || !payload.Unit) {
             showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
