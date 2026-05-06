@@ -431,6 +431,15 @@ tr:last-child td {
   border-bottom: none;
 }
 
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr:hover, 
+tbody tr:active {
+  background-color: #f0f7ff;
+}
+
 .badge {
   padding: 0.25rem 0.6rem;
   border-radius: 20px;
