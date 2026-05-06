@@ -496,9 +496,24 @@ function filterDropdown(prefix, query) {
         const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const perluPulang = (item.Perlu_Pulang || "YA").trim().toUpperCase();
 
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')">
-            <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
-            <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+        const thumbUrl = imageUrl ? (() => {
+            let u = imageUrl;
+            if (u.includes('drive.google.com/file/d/')) {
+                const m = u.match(/\/d\/([^/]+)\//);
+                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
+            } else if (u.includes('uc?export=view&id=')) {
+                const m = u.match(/id=(.*)/);
+                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
+            }
+            return u;
+        })() : '';
+
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')" style="display:flex; align-items:center; gap:0.6rem;">
+            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
+            <div>
+                <strong>${item.Item_ID}</strong> - ${item.Item_Name}<br>
+                <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+            </div>
         </div>`;
     }).join('');
 
@@ -1440,8 +1455,27 @@ function filterAdminList(query) {
             actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">❌ Set Discontinued</button>`;
         }
 
+        // Build thumbnail
+        const rawImgUrl = item.Image_URL || '';
+        let thumbSrc = '';
+        if (rawImgUrl) {
+            if (rawImgUrl.includes('drive.google.com/file/d/')) {
+                const m = rawImgUrl.match(/\/d\/([^/]+)\//);
+                if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w80`;
+            } else if (rawImgUrl.includes('uc?export=view&id=')) {
+                const m = rawImgUrl.match(/id=(.*)/);
+                if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w80`;
+            } else {
+                thumbSrc = rawImgUrl;
+            }
+        }
+        const thumbHtml = thumbSrc
+            ? `<img src="${thumbSrc}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#f0f0f0;" onerror="this.outerHTML='<div style=&quot;width:44px;height:44px;border-radius:6px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;&quot;>📦</div>'">`
+            : `<div style="width:44px; height:44px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`;
+
         return `
             <tr>
+                <td style="text-align:center; padding:0.4rem;">${thumbHtml}</td>
                 <td><strong>${item.Item_ID}</strong></td>
                 <td>${item.Item_Name} <br><small style="color:var(--text-secondary)">Pembekal: ${item.Supplier || '-'}</small></td>
                 <td style="color: var(--primary-color); font-weight: bold;">${totalMasuk}</td>
