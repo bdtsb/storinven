@@ -34,6 +34,7 @@ function logout() {
     if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = '';
     if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'none';
     if (document.getElementById('header-logout-btn')) document.getElementById('header-logout-btn').style.display = 'none';
+    if (document.getElementById('header-refresh-btn')) document.getElementById('header-refresh-btn').style.display = 'none';
 
     // Clear localStorage values
     localStorage.removeItem('bdt_login_user');
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
             if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'inline-block';
             if (document.getElementById('header-logout-btn')) document.getElementById('header-logout-btn').style.display = 'inline-block';
+            if (document.getElementById('header-refresh-btn')) document.getElementById('header-refresh-btn').style.display = 'inline-block';
 
             if (isAdmin) {
                 if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
@@ -863,6 +865,7 @@ async function submitLogin() {
             if (document.getElementById('header-user-name')) document.getElementById('header-user-name').innerText = currentUser;
             if (document.getElementById('header-dash')) document.getElementById('header-dash').style.display = 'inline-block';
             if (document.getElementById('header-logout-btn')) document.getElementById('header-logout-btn').style.display = 'inline-block';
+            if (document.getElementById('header-refresh-btn')) document.getElementById('header-refresh-btn').style.display = 'inline-block';
 
             // Show admin tab if authorized
             if (isAdmin) {
