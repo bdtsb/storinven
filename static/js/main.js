@@ -200,6 +200,7 @@ async function fetchTransactions() {
             allTransactions = data.data; // Cache all for profile view
             sortRecentTransactions();
             sortProfileTransactions();
+            populateYearDropdown();
         }
     } catch (error) {
         console.error(error);
@@ -1298,6 +1299,78 @@ function sortProfileTransactions() {
     const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
     const sorted = doSortTransactions(personalTrans, sortVal);
     renderProfileHistory(sorted);
+}
+
+function populateYearDropdown() {
+    const yearSelect = document.getElementById('filter-year');
+    if (!yearSelect) return;
+    
+    const currentYear = new Date().getFullYear();
+    const years = new Set([currentYear]);
+    
+    // Extract years from allTransactions
+    if (allTransactions && allTransactions.length > 0) {
+        allTransactions.forEach(t => {
+            if (t.Timestamp) {
+                // Timestamp formats can vary (DD/MM/YYYY etc.), try to extract 4 digit year
+                const match = t.Timestamp.match(/\d{4}/);
+                if (match) years.add(parseInt(match[0]));
+            }
+        });
+    }
+    
+    // Sort descending
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+function filterAllTransactions() {
+    const month = document.getElementById('filter-month').value;
+    const year = document.getElementById('filter-year').value;
+    const tbody = document.querySelector('#all-trans-table tbody');
+    if (!tbody) return;
+
+    if (!allTransactions || allTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi.</td></tr>';
+        return;
+    }
+
+    const filtered = allTransactions.filter(t => {
+        if (!t.Timestamp) return false;
+        // Timestamp is DD/MM/YYYY HH:mm:ss or similar.
+        // Easiest is to check if it contains the month and year
+        // We know standard is DD/MM/YYYY so we can look for "/MM/YYYY" or just split it.
+        const ts = String(t.Timestamp);
+        // Let's use regex or split to extract parts assuming DD/MM/YYYY
+        // For robustness, check if ts includes the MM/YYYY string. 
+        // e.g. "05/06/2026"
+        const targetPattern = `/${month}/${year}`;
+        return ts.includes(targetPattern);
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(t => {
+        let badgeClass = 'badge-tambah';
+        let typeDisplay = 'TAMBAH';
+        if (t.Type === 'AMBIL' || t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
+        if (t.Type === 'PULANG' || t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
+        if (t.Type === 'TAMBAH' || t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+
+        return `
+        <tr>
+            <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
+            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
+            <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
+            <td><strong>${t.Quantity || 0}</strong></td>
+            <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || '-'}</td>
+            <td style="font-size: 0.75rem;">${t.Entered_By || '-'}</td>
+        </tr>`;
+    }).join('');
 }
 
 // ----------------------------------------
