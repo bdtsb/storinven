@@ -1660,12 +1660,15 @@ function renderApprovalList() {
     const tbody = document.querySelector('#admin-approval-table tbody');
     if (!tbody) return;
     
-    if (pendingRequests.length === 0) {
+    // Filter only Pending items for admin approval view
+    const actualPending = (pendingRequests || []).filter(r => r.Status === 'Pending');
+
+    if (actualPending.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = pendingRequests.map(r => {
+    tbody.innerHTML = actualPending.map(r => {
         let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
         return `
             <tr>
