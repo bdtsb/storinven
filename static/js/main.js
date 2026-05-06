@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('header-logout-btn')) document.getElementById('header-logout-btn').style.display = 'inline-block';
 
             if (isAdmin) {
-                document.getElementById('btn-tab-admin').style.display = 'inline-block';
-                document.getElementById('btn-tab-approval').style.display = 'inline-block';
+                if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
+                if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
             }
 
             document.getElementById('global-login-modal').style.display = 'none';
@@ -1587,7 +1587,8 @@ const originalSubmitLogin = submitLogin;
 window.submitLogin = async function() {
     await originalSubmitLogin();
     if (isAdmin) {
-        document.getElementById('btn-tab-approval').style.display = 'inline-block';
+        if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
+        if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
     }
 };
 

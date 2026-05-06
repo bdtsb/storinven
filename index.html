@@ -91,10 +91,6 @@
             <button class="tab-btn tab-ambil" onclick="switchTab('stock_out')">Ambil Barang</button>
             <button class="tab-btn tab-pulang" onclick="switchTab('return')">Pulang Barang</button>
             <button class="tab-btn tab-profil" onclick="switchTab('profile')">Profil</button>
-            <button class="tab-btn tab-admin" id="btn-tab-admin" onclick="switchTab('admin')"
-                style="display:none;">Admin Akses</button>
-            <button class="tab-btn tab-admin" id="btn-tab-approval" onclick="switchTab('approval')"
-                style="display:none; background-color: #e67e22;">Kelulusan</button>
         </div>
 
         <!-- Dashboard View -->
@@ -316,6 +312,11 @@
                     id="profile-name-display">Maklumat Pengguna</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem;" id="profile-stats-display">Memuatkan
                     statistik...</p>
+                <!-- Admin-only action buttons -->
+                <div id="profile-admin-actions" style="display:none; margin-top: 0.8rem; gap: 0.5rem; display: none;">
+                    <button onclick="switchTab('admin')" style="background: #2c3e50; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; margin-right: 0.5rem;">📦 Urus Stok</button>
+                    <button onclick="switchTab('approval')" style="background: #e67e22; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">✅ Kelulusan</button>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -382,6 +383,8 @@
         <!-- Admin View & Master List -->
         <div id="view-admin" class="view-section">
             <h2 class="section-title">Senarai Keseluruhan Barang (Master List)</h2>
+            <button type="button" class="btn-submit" onclick="switchTab('add_item')"
+                style="background-color: #27ae60; margin-bottom: 0.8rem; font-size: 0.85rem; padding: 0.5rem 1rem;">➕ Daftar / Tambah Stok</button>
             <div class="form-group" style="margin-bottom: 10px;">
                 <input type="text" id="admin-master-search" placeholder="Cari ID atau Nama Barang..." autocomplete="off"
                     oninput="filterAdminList(this.value)">
@@ -407,8 +410,6 @@
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn-submit" onclick="switchTab('add_item')"
-                style="background-color: #27ae60; margin-top: 0;">Daftar / Tambah</button>
         </div>
 
         <!-- Add Item / Stock In Unified View -->
