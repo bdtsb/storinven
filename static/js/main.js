@@ -341,7 +341,7 @@ function formatTimestamp(isoString) {
     if (!isoString) return '-';
 
     try {
-        const str = String(isoString).trim();
+        const str = String(isoString).trim().replace(/^'/, '');
         const parts = str.split(' ');
 
         // Check if it's the new standard backend format (DD/MM/YY HH:MM AM/PM)
