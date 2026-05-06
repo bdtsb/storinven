@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isAdmin) {
                 document.getElementById('btn-tab-admin').style.display = 'inline-block';
+                document.getElementById('btn-tab-approval').style.display = 'inline-block';
             }
 
             document.getElementById('global-login-modal').style.display = 'none';
@@ -354,7 +355,7 @@ function formatTimestamp(isoString) {
             const pad = n => String(n).padStart(2, '0');
             const day = pad(d.getDate());
             const month = pad(d.getMonth() + 1);
-            const year = String(d.getFullYear()).slice(-2);
+            const year = String(d.getFullYear());
             let hours = d.getHours();
             const mins = pad(d.getMinutes());
             const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -2028,9 +2029,24 @@ window.renderProfileHistory = async function() {
         return;
     }
 
-    // Since we merged, the order might be slightly off. We will reverse it so newest is at the top.
-    // In Google Sheets, newer rows are at the bottom, so reversing it puts newest at top.
-    merged.reverse();
+    // Sort by timestamp: newest first
+    merged.sort((a, b) => {
+        const parseTs = (ts) => {
+            if (!ts) return 0;
+            const s = String(ts).replace(/^'/, '');
+            // Try DD/MM/YY or DD/MM/YYYY format
+            const m = s.match(/(\d{2})\/(\d{2})\/(\d{2,4})\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (m) {
+                let yr = parseInt(m[3]); if (yr < 100) yr += 2000;
+                let hr = parseInt(m[4]); const isPM = m[6].toUpperCase() === 'PM';
+                if (isPM && hr < 12) hr += 12; if (!isPM && hr === 12) hr = 0;
+                return new Date(yr, parseInt(m[2])-1, parseInt(m[1]), hr, parseInt(m[5])).getTime();
+            }
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? 0 : d.getTime();
+        };
+        return parseTs(b.Timestamp) - parseTs(a.Timestamp);
+    });
 
     tbody.innerHTML = merged.map(t => {
         if (!t) return '';
