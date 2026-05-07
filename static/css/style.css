@@ -494,11 +494,12 @@ tr:last-child td {
 
 tbody tr {
   transition: background-color 0.15s ease;
+  cursor: pointer;
 }
 
 tbody tr:hover, 
 tbody tr:active {
-  background-color: #f0f7ff;
+  background-color: #e8f1ff !important;
 }
 
 .badge {
@@ -567,8 +568,9 @@ tbody tr:active {
   border-bottom: none;
 }
 
-.combo-item:hover {
-  background-color: #f8fbff;
+.combo-item:hover,
+.combo-item:active {
+  background-color: #e8f1ff !important;
 }
 
 /* Loader */
