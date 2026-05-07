@@ -29,6 +29,24 @@ function getThumbHtml(imageUrl, size = 40) {
     return `<img src="${thumbSrc}" style="width:${size}px; height:${size}px; object-fit:cover; border-radius:6px; background:#f0f0f0;" onerror="this.outerHTML='<div style=&quot;width:${size}px;height:${size}px;border-radius:6px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1rem;&quot;>📦</div>'">`;
 }
 
+// Clear Search Utility
+function clearSearch(prefix) {
+    const searchInput = document.getElementById(`${prefix}-search`);
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+        
+        // Trigger the relevant filter function
+        if (prefix === 'add') {
+            filterUnifiedDropdown('');
+            showUnifiedDropdown();
+        } else {
+            filterDropdown(prefix, '');
+            showDropdown(prefix);
+        }
+    }
+}
+
 function logout() {
     currentUser = "";
     currentUserPin = "";

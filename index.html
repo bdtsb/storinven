@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="./static/img/icon.png">
     <link rel="apple-touch-icon" href="./static/img/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./static/css/style.css?v=12">
+    <link rel="stylesheet" href="./static/css/style.css?v=13">
 </head>
 
 <body>
@@ -244,15 +244,20 @@
             <h2 class="section-title">Keluarkan Stok untuk Projek</h2>
             <form onsubmit="addToCart(event, 'AMBIL')">
                 <div class="form-group combo-box">
+                    <div class="item-preview-container">
+                        <img id="out-item-image" class="item-preview-img" src="" alt="Gambar Barang" style="display:none;">
+                    </div>
                     <label>Cari Barang</label>
-                    <input type="text" id="out-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
-                        oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
+                    <div class="search-wrapper">
+                        <input type="text" id="out-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
+                            oninput="filterDropdown('out', this.value)" onfocus="showDropdown('out')">
+                        <button type="button" class="clear-btn" onclick="clearSearch('out')" title="Padam carian">×</button>
+                    </div>
                     <input type="hidden" id="out-item-id" required>
                     <input type="hidden" id="out-item-name">
                     <div class="combo-list" id="out-dropdown"></div>
                     <small id="out-current-stock"
                         style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
-                    <img id="out-item-image" src="" alt="Gambar Barang" style="display:none; max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 </div>
 
                 <div class="form-group" id="out-serial-group" style="display:none;">
@@ -315,15 +320,20 @@
             <h2 class="section-title">Terima Pemulangan Stok dari Projek</h2>
             <form onsubmit="addToCart(event, 'PULANG')">
                 <div class="form-group combo-box">
+                    <div class="item-preview-container">
+                        <img id="ret-item-image" class="item-preview-img" src="" alt="Gambar Barang" style="display:none;">
+                    </div>
                     <label>Cari Barang</label>
-                    <input type="text" id="ret-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
-                        oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
+                    <div class="search-wrapper">
+                        <input type="text" id="ret-search" placeholder="Taip ID atau Nama Barang..." autocomplete="off"
+                            oninput="filterDropdown('ret', this.value)" onfocus="showDropdown('ret')">
+                        <button type="button" class="clear-btn" onclick="clearSearch('ret')" title="Padam carian">×</button>
+                    </div>
                     <input type="hidden" id="ret-item-id" required>
                     <input type="hidden" id="ret-item-name">
                     <div class="combo-list" id="ret-dropdown"></div>
                     <small id="ret-current-stock"
                         style="color:var(--text-secondary); display:block; margin-top:0.3rem;"></small>
-                    <img id="ret-item-image" src="" alt="Gambar Barang" style="display:none; max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 </div>
 
                 <div class="form-group" id="ret-serial-group" style="display:none;">
@@ -492,9 +502,12 @@
             <form onsubmit="handleUnifiedAdd(event)">
                 <div class="form-group combo-box">
                     <label>ID Barang (Cari Item Sedia Ada atau Taip ID Baru)</label>
-                    <input type="text" id="add-search" placeholder="Contoh: ITM999" autocomplete="off"
-                        oninput="filterUnifiedDropdown(this.value)" onfocus="showUnifiedDropdown()"
-                        style="text-transform: uppercase;">
+                    <div class="search-wrapper">
+                        <input type="text" id="add-search" placeholder="Contoh: ITM999" autocomplete="off"
+                            oninput="filterUnifiedDropdown(this.value)" onfocus="showUnifiedDropdown()"
+                            style="text-transform: uppercase;">
+                        <button type="button" class="clear-btn" onclick="clearSearch('add')" title="Padam carian">×</button>
+                    </div>
                     <div class="combo-list" id="add-dropdown"></div>
                     <input type="hidden" id="add-item-id">
                     <small id="add-status" style="display:block; margin-top:0.3rem;"></small>
@@ -715,7 +728,7 @@
 
     <div id="toast">Message goes here</div>
 
-    <script src="./static/js/main.js?v=12"></script>
+    <script src="./static/js/main.js?v=13"></script>
 </body>
 
 </html>
