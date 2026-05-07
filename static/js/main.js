@@ -13,6 +13,22 @@ let currentUser = "";
 let currentUserPin = "";
 let isAdmin = false;
 
+// Utility for Thumbnail HTML
+function getThumbHtml(imageUrl, size = 40) {
+    if (!imageUrl) return `<div style="width:${size}px; height:${size}px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1rem;">📦</div>`;
+    
+    let thumbSrc = imageUrl;
+    if (imageUrl.includes('drive.google.com/file/d/')) {
+        const m = imageUrl.match(/\/d\/([^/]+)\//);
+        if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${size*2}`;
+    } else if (imageUrl.includes('uc?export=view&id=')) {
+        const m = imageUrl.match(/id=(.*)/);
+        if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${size*2}`;
+    }
+    
+    return `<img src="${thumbSrc}" style="width:${size}px; height:${size}px; object-fit:cover; border-radius:6px; background:#f0f0f0;" onerror="this.outerHTML='<div style=&quot;width:${size}px;height:${size}px;border-radius:6px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1rem;&quot;>📦</div>'">`;
+}
+
 function logout() {
     currentUser = "";
     currentUserPin = "";
@@ -223,7 +239,9 @@ function updateDashboard() {
                 if (parseInt(item.Current_Stock || 0, 10) <= parseInt(item.Min_Stock || 0, 10)) {
                     lowStockCount++;
                     const tr = document.createElement('tr');
+                    const thumb = getThumbHtml(item.Image_URL, 40);
                     tr.innerHTML = `
+                        <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
                         <td>${item.Item_ID || '-'}</td>
                         <td>${item.Item_Name || '-'}</td>
                         <td style="color: #ff8c00; font-weight: bold;">${item.Current_Stock || 0}</td>
@@ -271,8 +289,13 @@ function renderRecentTransactions(transactions) {
             if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
             if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
+            // Find image from masterItems
+            const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
+            const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
             return `
             <tr>
+                <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
                 <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
                 <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
                 <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
@@ -638,7 +661,7 @@ function filterUnifiedDropdown(query) {
         const badge = isDiscontinued ? `<span class="stock-badge badge-danger" style="font-size: 0.6rem; padding: 0.1rem 0.3rem; vertical-align: middle; margin-left: 5px;">Discontinued</span>` : '';
 
         // Build thumbnail
-        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'");
         const thumbUrl = imageUrl ? (() => {
             let u = imageUrl;
             if (u.includes('drive.google.com/file/d/')) {
@@ -1436,23 +1459,7 @@ function filterAdminList(query) {
             actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">❌ Set Discontinued</button>`;
         }
 
-        // Build thumbnail
-        const rawImgUrl = item.Image_URL || '';
-        let thumbSrc = '';
-        if (rawImgUrl) {
-            if (rawImgUrl.includes('drive.google.com/file/d/')) {
-                const m = rawImgUrl.match(/\/d\/([^/]+)\//);
-                if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w80`;
-            } else if (rawImgUrl.includes('uc?export=view&id=')) {
-                const m = rawImgUrl.match(/id=(.*)/);
-                if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w80`;
-            } else {
-                thumbSrc = rawImgUrl;
-            }
-        }
-        const thumbHtml = thumbSrc
-            ? `<img src="${thumbSrc}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#f0f0f0;" onerror="this.outerHTML='<div style=&quot;width:44px;height:44px;border-radius:6px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;&quot;>📦</div>'">`
-            : `<div style="width:44px; height:44px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`;
+        const thumbHtml = getThumbHtml(item.Image_URL, 44);
 
         return `
             <tr>
@@ -1785,8 +1792,13 @@ function renderApprovalList() {
 
     tbody.innerHTML = actualPending.map(r => {
         let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
+        // Find image
+        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
+        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
         return `
             <tr>
+                <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
                 <td style="font-size:0.75rem;">${r.Timestamp}</td>
                 <td><strong>${r.Entered_By}</strong></td>
                 <td><span class="badge" style="background:${typeColor}">${r.Type}</span></td>
@@ -2180,8 +2192,13 @@ window.renderProfileHistory = async function() {
         
         let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">Cetak</button>` : '-';
 
+        // Find image from masterItems
+        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
+        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
         return `
         <tr>
+            <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${t.Type}</span></td>
             <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
