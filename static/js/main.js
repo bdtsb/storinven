@@ -2049,12 +2049,32 @@ function initSignaturePad() {
     canvasCtx.fillStyle = '#ffffff';
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
     canvasCtx.strokeStyle = '#000000';
-    canvasCtx.lineWidth = 3;
     canvasCtx.lineCap = 'round';
+    canvasCtx.lineJoin = 'round';
+
+    let lastX = 0, lastY = 0, lastTime = 0, currentWidth = 4;
+
+    const getPos = (e) => {
+        let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    };
 
     const startPosition = (e) => {
         isDrawing = true;
-        draw(e);
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+        lastTime = Date.now();
+        currentWidth = 4;
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(lastX, lastY);
     };
 
     const endPosition = () => {
@@ -2066,20 +2086,27 @@ function initSignaturePad() {
         if (!isDrawing) return;
         e.preventDefault();
         
-        let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const pos = getPos(e);
+        const now = Date.now();
+        const dist = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
+        const time = now - lastTime;
         
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        // Pressure Simulation: Velocity-based width (Faster = Thinner)
+        const velocity = dist / (time || 1);
+        let targetWidth = Math.max(1.2, Math.min(5.5, 9 / (velocity + 1)));
         
-        const x = (clientX - rect.left) * scaleX;
-        const y = (clientY - rect.top) * scaleY;
-
-        canvasCtx.lineTo(x, y);
-        canvasCtx.stroke();
+        // Smoothing the line width transition
+        currentWidth = currentWidth * 0.7 + targetWidth * 0.3;
+        
+        canvasCtx.lineWidth = currentWidth;
         canvasCtx.beginPath();
-        canvasCtx.moveTo(x, y);
+        canvasCtx.moveTo(lastX, lastY);
+        canvasCtx.lineTo(pos.x, pos.y);
+        canvasCtx.stroke();
+
+        lastX = pos.x;
+        lastY = pos.y;
+        lastTime = now;
     };
 
     canvas.addEventListener('mousedown', startPosition);
