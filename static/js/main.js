@@ -1407,7 +1407,7 @@ function filterAllTransactions() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
         return;
     }
 
@@ -1419,8 +1419,13 @@ function filterAllTransactions() {
         if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
         if (t.Type === 'TAMBAH' || t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
 
+        // Find image from masterItems
+        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
+        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
         return `
         <tr>
+            <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
             <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>

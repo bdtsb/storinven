@@ -66,6 +66,7 @@ body {
   display: flex;
   justify-content: center;
   padding: 20px 15px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1 {
@@ -494,11 +495,10 @@ tr:last-child td {
 
 tbody tr {
   transition: background-color 0.15s ease;
-  cursor: pointer;
 }
 
-tbody tr:hover, 
-tbody tr:active {
+tbody tr:hover td, 
+tbody tr:active td {
   background-color: #e8f1ff !important;
 }
 
