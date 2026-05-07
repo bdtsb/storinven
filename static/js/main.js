@@ -1328,7 +1328,8 @@ function sortProfileTransactions() {
 
 function populateYearDropdown() {
     const yearSelect = document.getElementById('filter-year');
-    if (!yearSelect) return;
+    const approvalYearSelect = document.getElementById('filter-approval-year');
+    if (!yearSelect && !approvalYearSelect) return;
     
     const currentYear = new Date().getFullYear();
     const years = new Set([currentYear]);
@@ -1337,16 +1338,26 @@ function populateYearDropdown() {
     if (allTransactions && allTransactions.length > 0) {
         allTransactions.forEach(t => {
             if (t.Timestamp) {
-                // Timestamp formats can vary (DD/MM/YYYY etc.), try to extract 4 digit year
                 const match = t.Timestamp.match(/\d{4}/);
                 if (match) years.add(parseInt(match[0]));
             }
         });
     }
+    // Also extract from pendingRequests for approval history
+    if (pendingRequests && pendingRequests.length > 0) {
+        pendingRequests.forEach(r => {
+            if (r.Timestamp) {
+                const match = r.Timestamp.match(/\d{4}/);
+                if (match) years.add(parseInt(match[0]));
+            }
+        });
+    }
     
-    // Sort descending
     const sortedYears = Array.from(years).sort((a, b) => b - a);
-    yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+    const options = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+    
+    if (yearSelect) yearSelect.innerHTML = options;
+    if (approvalYearSelect) approvalYearSelect.innerHTML = options;
 }
 
 function filterAllTransactions() {
@@ -1425,6 +1436,14 @@ function filterAdminList(query) {
         return;
     }
 
+    // Pre-calculate latest invoices from transactions for "View Invoice" button
+    const latestInvoices = {};
+    (allTransactions || []).forEach(t => {
+        if ((t.Type === 'DAFTAR' || t.Type === 'TAMBAH') && t.Attachment_URL) {
+            latestInvoices[t.Item_ID] = t.Attachment_URL;
+        }
+    });
+
     const html = filtered.map(item => {
         const totalMasuk = parseInt(item.Total_Quantity || 0, 10);
         const bakiSemasa = parseInt(item.Current_Stock || 0, 10);
@@ -1440,13 +1459,19 @@ function filterAdminList(query) {
         }
         
         let actionButtons = `
-            <button onclick="quickAddStock('${item.Item_ID}')" style="background:#2980b9; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">➕ Tambah Stok</button>
+            <button onclick="quickAddStock('${item.Item_ID}')" style="background:#2980b9; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">📦 Tambah Stok</button>
         `;
+
+        // Add View Invoice button if available
+        const invUrl = latestInvoices[item.Item_ID];
+        if (invUrl) {
+            actionButtons += `<button onclick="window.open('${invUrl}', '_blank')" style="background:#8e44ad; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">📄 View Invoice</button>`;
+        }
         
         if (item.Status === 'Discontinued') {
             actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', true)" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🔄 Aktifkan Semula</button>`;
         } else {
-            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">❌ Set Discontinued</button>`;
+            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🚫 Set Discontinued</button>`;
         }
 
         const thumbHtml = getThumbHtml(item.Image_URL, 44);
@@ -1776,31 +1801,89 @@ function renderApprovalList() {
     const actualPending = (pendingRequests || []).filter(r => r.Status === 'Pending');
 
     if (actualPending.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
-        return;
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
+    } else {
+        tbody.innerHTML = actualPending.map(r => {
+            let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
+            // Find image
+            const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
+            const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
+            return `
+                <tr>
+                    <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
+                    <td style="font-size:0.75rem;">${r.Timestamp}</td>
+                    <td><strong>${r.Entered_By}</strong></td>
+                    <td><span class="badge" style="background:${typeColor}">${r.Type}</span></td>
+                    <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
+                    <td>${r.Quantity} <br><small>${r.Selected_Serial || ''}</small></td>
+                    <td>
+                        <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Lulus</button>
+                        <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Tolak</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    tbody.innerHTML = actualPending.map(r => {
-        let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
-        // Find image
-        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
-        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+    // --- Render History Section (Approved/Rejected) ---
+    const historyTbody = document.querySelector('#admin-approval-history-table tbody');
+    if (historyTbody) {
+        const history = (pendingRequests || []).filter(r => r.Status === 'Approved' || r.Status === 'Rejected');
+        
+        // Helper to parse dd/MM/yyyy hh:mm a
+        const parseAppDate = (str) => {
+            if (!str) return 0;
+            const parts = str.split(/[\/\s:]+/);
+            if (parts.length < 5) return 0;
+            let day = parseInt(parts[0], 10), month = parseInt(parts[1], 10) - 1, year = parseInt(parts[2], 10);
+            let hour = parseInt(parts[3], 10), minute = parseInt(parts[4], 10);
+            let ampm = parts[5] ? parts[5].toUpperCase() : 'AM';
+            if (ampm === 'PM' && hour < 12) hour += 12;
+            if (ampm === 'AM' && hour === 12) hour = 0;
+            return new Date(year, month, day, hour, minute).getTime();
+        };
 
-        return `
-            <tr>
-                <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
-                <td style="font-size:0.75rem;">${r.Timestamp}</td>
-                <td><strong>${r.Entered_By}</strong></td>
-                <td><span class="badge" style="background:${typeColor}">${r.Type}</span></td>
-                <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
-                <td>${r.Quantity} <br><small>${r.Selected_Serial || ''}</small></td>
-                <td>
-                    <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Lulus</button>
-                    <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Tolak</button>
-                </td>
-            </tr>
-        `;
-    }).join('');
+        // Filter by Month and Year
+        const filterMonth = document.getElementById('filter-approval-month') ? document.getElementById('filter-approval-month').value : "";
+        const filterYear = document.getElementById('filter-approval-year') ? document.getElementById('filter-approval-year').value : "";
+
+        let filteredHistory = history.filter(r => {
+            if (!r.Timestamp) return false;
+            let matchMonth = true;
+            let matchYear = true;
+            if (filterMonth) matchMonth = r.Timestamp.includes(`/${filterMonth}/`);
+            if (filterYear) matchYear = r.Timestamp.includes(`/${filterYear}`);
+            return matchMonth && matchYear;
+        });
+
+        filteredHistory.sort((a,b) => parseAppDate(b.Timestamp) - parseAppDate(a.Timestamp));
+
+        if (filteredHistory.length === 0) {
+            historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod sejarah kelulusan ditemui bagi tempoh ini.</td></tr>';
+        } else {
+            historyTbody.innerHTML = filteredHistory.map(r => {
+                let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
+                let statusText = r.Status === 'Approved' ? 'Lulus' : 'Ditolak';
+                let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${r.PDF_URL}', '_blank')">Cetak</button>` : '-';
+                
+                const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
+                const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+
+                return `
+                    <tr>
+                        <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
+                        <td style="font-size:0.75rem;">${r.Timestamp}</td>
+                        <td><strong>${r.Entered_By}</strong></td>
+                        <td><span class="badge" style="background:${r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
+                        <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
+                        <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
+                        <td style="text-align:center;">${pdfBtn}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
 }
 
 

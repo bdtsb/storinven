@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="./static/img/icon.png">
     <link rel="apple-touch-icon" href="./static/img/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./static/css/style.css?v=24">
+    <link rel="stylesheet" href="./static/css/style.css?v=26">
 </head>
 
 <body>
@@ -461,6 +461,55 @@
                     </tbody>
                 </table>
             </div>
+
+            <h2 class="section-title" style="margin-top: 2rem;">Sejarah Keseluruhan Kelulusan</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; align-items: flex-end;">
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Bulan</label>
+                    <select id="filter-approval-month" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                        <option value="">Semua</option>
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Mac</option>
+                        <option value="04">April</option>
+                        <option value="05" selected>Mei</option>
+                        <option value="06">Jun</option>
+                        <option value="07">Julai</option>
+                        <option value="08">Ogos</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Disember</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 100px;">
+                    <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Tahun</label>
+                    <select id="filter-approval-year" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                        <!-- Populated dynamically via JS -->
+                    </select>
+                </div>
+                <button onclick="renderApprovalList()" class="btn-submit" style="flex: 1; min-width: 120px; margin-top: 0; padding: 10px; background-color: #3498db; border-radius: 6px;">
+                    🔍 Tapis Sejarah
+                </button>
+            </div>
+            <div class="table-responsive" style="max-height: 280px; border: 1px solid var(--border-color); overflow-y: auto;">
+                <table id="admin-approval-history-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">Gambar</th>
+                            <th>Masa Transaksi</th>
+                            <th>Oleh</th>
+                            <th>Jenis</th>
+                            <th>Barang</th>
+                            <th>Status</th>
+                            <th>Resit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" style="text-align:center;">Tiada rekod sejarah.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Admin View & Master List -->
@@ -652,12 +701,11 @@
                         style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit; font-size: 1rem; background-color: #f0f0f0;">
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+                <div style="display: flex; gap: 15px; margin-top: 25px; justify-content: center; align-items: center; width: 100%;">
                     <button type="button" class="btn-cancel" onclick="switchTab('admin')"
-                        style="width: max-content; padding: 8px 20px; font-size: 0.85rem;">Batal</button>
+                        style="flex: 1; max-width: 250px; padding: 12px; font-size: 1rem; background-color: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Batal</button>
                     <button type="submit" class="btn-submit"
-                        style="background-color: #7f8c8d; width: max-content; padding: 8px 20px; font-size: 0.85rem; margin-top: 0;">Sahkan
-                        Simpan Stok</button>
+                        style="flex: 1; max-width: 250px; padding: 12px; font-size: 1rem; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0;">Sahkan Simpan Stok</button>
                 </div>
             </form>
         </div>
@@ -728,7 +776,7 @@
 
     <div id="toast">Message goes here</div>
 
-    <script src="./static/js/main.js?v=24"></script>
+    <script src="./static/js/main.js?v=26"></script>
 </body>
 
 </html>
