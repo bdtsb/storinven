@@ -747,6 +747,7 @@ function addToCart(event, type) {
         Quantity: qty,
         Type: type,
         Project: project,
+        Due_Date: prefix === 'out' ? document.getElementById('out-due-date').value : '',
         Selected_Serial: selectedSerial,
         Remarks: ""
     };
@@ -1668,6 +1669,8 @@ window.handleUnifiedAdd = async function(event) {
         payload.Category = document.getElementById('add-category').value;
         payload.Unit = document.getElementById('add-unit').value;
         payload.Min_Stock = document.getElementById('add-min').value;
+        const ppEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
+        payload.Perlu_Pulang = ppEl ? ppEl.value : 'TIDAK';
 
         if (!payload.Category || !payload.Unit) {
             showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
@@ -1967,7 +1970,7 @@ window.filterDropdown = function(prefix, query) {
         const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const perluPulang = (item.Perlu_Pulang || "YA").trim().toUpperCase();
+        const perluPulang = (item.Perlu_Pulang || "TIDAK").trim().toUpperCase();
         
         const thumbUrl = imageUrl ? (() => {
             let u = imageUrl;
