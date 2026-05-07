@@ -1826,32 +1826,62 @@ function renderApprovalList() {
         }).join('');
     }
 
-    // --- Render History Section (Approved/Rejected) ---
+    // Helper to parse dd/MM/yyyy hh:mm a
+    const parseAppDate = (str) => {
+        if (!str) return 0;
+        const parts = str.split(/[\/\s:]+/);
+        if (parts.length < 5) return 0;
+        let day = parseInt(parts[0], 10), month = parseInt(parts[1], 10) - 1, year = parseInt(parts[2], 10);
+        let hour = parseInt(parts[3], 10), minute = parseInt(parts[4], 10);
+        let ampm = parts[5] ? parts[5].toUpperCase() : 'AM';
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        return new Date(year, month, day, hour, minute).getTime();
+    };
+
+    const history = (pendingRequests || []).filter(r => r.Status === 'Approved' || r.Status === 'Rejected');
+
+    // Helper to generate row HTML for history
+    const renderHistoryRow = (r) => {
+        let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
+        let statusText = r.Status === 'Approved' ? 'Lulus' : 'Ditolak';
+        let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${r.PDF_URL}', '_blank')">Cetak</button>` : '-';
+        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
+        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+        return `
+            <tr>
+                <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
+                <td style="font-size:0.75rem;">${r.Timestamp}</td>
+                <td><strong>${r.Entered_By}</strong></td>
+                <td><span class="badge" style="background:${r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
+                <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
+                <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
+                <td style="text-align:center;">${pdfBtn}</td>
+            </tr>
+        `;
+    };
+
+    // 1. Render Recent 20 Section
+    const recentTbody = document.querySelector('#admin-approval-recent-table tbody');
+    if (recentTbody) {
+        const sortedHistory = [...history].sort((a,b) => parseAppDate(b.Timestamp) - parseAppDate(a.Timestamp));
+        const recent20 = sortedHistory.slice(0, 20);
+        if (recent20.length === 0) {
+            recentTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod kelulusan terkini.</td></tr>';
+        } else {
+            recentTbody.innerHTML = recent20.map(renderHistoryRow).join('');
+        }
+    }
+
+    // 2. Render Filtered History Section
     const historyTbody = document.querySelector('#admin-approval-history-table tbody');
     if (historyTbody) {
-        const history = (pendingRequests || []).filter(r => r.Status === 'Approved' || r.Status === 'Rejected');
-        
-        // Helper to parse dd/MM/yyyy hh:mm a
-        const parseAppDate = (str) => {
-            if (!str) return 0;
-            const parts = str.split(/[\/\s:]+/);
-            if (parts.length < 5) return 0;
-            let day = parseInt(parts[0], 10), month = parseInt(parts[1], 10) - 1, year = parseInt(parts[2], 10);
-            let hour = parseInt(parts[3], 10), minute = parseInt(parts[4], 10);
-            let ampm = parts[5] ? parts[5].toUpperCase() : 'AM';
-            if (ampm === 'PM' && hour < 12) hour += 12;
-            if (ampm === 'AM' && hour === 12) hour = 0;
-            return new Date(year, month, day, hour, minute).getTime();
-        };
-
-        // Filter by Month and Year
         const filterMonth = document.getElementById('filter-approval-month') ? document.getElementById('filter-approval-month').value : "";
         const filterYear = document.getElementById('filter-approval-year') ? document.getElementById('filter-approval-year').value : "";
 
         let filteredHistory = history.filter(r => {
             if (!r.Timestamp) return false;
-            let matchMonth = true;
-            let matchYear = true;
+            let matchMonth = true, matchYear = true;
             if (filterMonth) matchMonth = r.Timestamp.includes(`/${filterMonth}/`);
             if (filterYear) matchYear = r.Timestamp.includes(`/${filterYear}`);
             return matchMonth && matchYear;
@@ -1860,28 +1890,9 @@ function renderApprovalList() {
         filteredHistory.sort((a,b) => parseAppDate(b.Timestamp) - parseAppDate(a.Timestamp));
 
         if (filteredHistory.length === 0) {
-            historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod sejarah kelulusan ditemui bagi tempoh ini.</td></tr>';
+            historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Pilih bulan dan tahun untuk tapisan.</td></tr>';
         } else {
-            historyTbody.innerHTML = filteredHistory.map(r => {
-                let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
-                let statusText = r.Status === 'Approved' ? 'Lulus' : 'Ditolak';
-                let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${r.PDF_URL}', '_blank')">Cetak</button>` : '-';
-                
-                const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
-                const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
-
-                return `
-                    <tr>
-                        <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
-                        <td style="font-size:0.75rem;">${r.Timestamp}</td>
-                        <td><strong>${r.Entered_By}</strong></td>
-                        <td><span class="badge" style="background:${r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
-                        <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
-                        <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
-                        <td style="text-align:center;">${pdfBtn}</td>
-                    </tr>
-                `;
-            }).join('');
+            historyTbody.innerHTML = filteredHistory.map(renderHistoryRow).join('');
         }
     }
 }
