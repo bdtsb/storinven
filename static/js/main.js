@@ -1881,7 +1881,7 @@ function renderApprovalList() {
     const renderHistoryRow = (r) => {
         let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
         let statusText = r.Status === 'Approved' ? 'Lulus' : 'Ditolak';
-        let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${r.PDF_URL}', '_blank')">Cetak</button>` : '-';
+        let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${r.PDF_URL}')">Cetak</button>` : '-';
         const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
         const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
         return `
@@ -2226,7 +2226,7 @@ async function doActualProcessRequest(payloadObj, sigBase64) {
         if (data.status === 'success') {
             showToast(data.message, 'success');
             if (data.pdf_url) {
-                window.open(data.pdf_url, '_blank');
+                openDirectPdf(data.pdf_url);
             }
             await fetchPendingRequests();
             await fetchItems();
@@ -2323,7 +2323,7 @@ window.renderProfileHistory = async function() {
         
         let statusBadge = `<span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span>`;
         
-        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="window.open('${t.PDF_URL}', '_blank')">Cetak</button>` : '-';
+        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${t.PDF_URL}')">Cetak</button>` : '-';
 
         // Find image from masterItems
         const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
@@ -2345,4 +2345,14 @@ window.renderProfileHistory = async function() {
 // Execute init on load if it's already DOMContentLoaded
 if (document.readyState === "complete" || document.readyState === "interactive") {
     setTimeout(initSignaturePad, 100);
+}
+
+function openDirectPdf(url) {
+    if (!url) return;
+    let directUrl = url;
+    const match = url.match(/\/d\/([^/]+)/);
+    if (match && match[1]) {
+        directUrl = `https://drive.google.com/uc?id=${match[1]}&export=view`;
+    }
+    window.open(directUrl, '_blank');
 }
