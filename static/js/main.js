@@ -2379,7 +2379,8 @@ function openDirectPdf(url) {
     let directUrl = url;
     const match = url.match(/\/d\/([^/]+)/);
     if (match && match[1]) {
-        directUrl = `https://drive.google.com/uc?id=${match[1]}&export=view`;
+        // Using /preview is more reliable for mobile browsers to avoid "hanging"
+        directUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
     }
     window.open(directUrl, '_blank');
 }
