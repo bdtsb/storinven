@@ -448,7 +448,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
             let finalUrl = imageUrl;
             // Convert standard Drive link or old uc link to reliable Thumbnail API link
             if (finalUrl.includes("drive.google.com/file/d/")) {
-                const match = finalUrl.match(/\/d\/(.*?)\//);
+                const match = finalUrl.match(/\/d\/([^/]+)\//);
 
                 if (match && match[1]) {
                     finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
@@ -637,10 +637,27 @@ function filterUnifiedDropdown(query) {
         const nameStyle = isDiscontinued ? 'text-decoration: line-through; color: #999;' : '';
         const badge = isDiscontinued ? `<span class="stock-badge badge-danger" style="font-size: 0.6rem; padding: 0.1rem 0.3rem; vertical-align: middle; margin-left: 5px;">Discontinued</span>` : '';
 
+        // Build thumbnail
+        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const thumbUrl = imageUrl ? (() => {
+            let u = imageUrl;
+            if (u.includes('drive.google.com/file/d/')) {
+                const m = u.match(/\/d\/([^/]+)\//);
+                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
+            } else if (u.includes('uc?export=view&id=')) {
+                const m = u.match(/id=(.*)/);
+                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
+            }
+            return u;
+        })() : '';
+
         return `
-        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')">
-            <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
-            <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')" style="display:flex; align-items:center; gap:0.6rem;">
+            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
+            <div>
+                <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
+                <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+            </div>
         </div>
         `;
     }).join('');
@@ -998,43 +1015,7 @@ function renderAdminList() {
     filterAdminList('');
 }
 
-function filterAdminList(query) {
-    const q = query.toLowerCase();
-    const tbody = document.querySelector('#admin-master-table tbody');
-    tbody.innerHTML = ''; // Clear existing rows
 
-    const filtered = masterItems.filter(item => {
-        const idMatch = String(item.Item_ID).toLowerCase().includes(q);
-        const nameMatch = String(item.Item_Name).toLowerCase().includes(q);
-        return idMatch || nameMatch;
-    });
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 1.5rem;">Tiada rekod dijumpai.</td></tr>`;
-        return;
-    }
-
-    filtered.forEach(item => {
-        const tr = document.createElement('tr');
-        const isDiscontinued = item.Status === 'Discontinued';
-        const statusBadge = isDiscontinued ? `<span class="stock-badge badge-danger">Discontinued</span>` : `<span class="stock-badge badge-success">Aktif</span>`;
-        const actionBtnText = isDiscontinued ? 'Aktifkan Semula' : 'Set Discontinued';
-        const actionBtnClass = isDiscontinued ? 'btn-submit' : 'btn-cancel';
-        const newStatusTarget = isDiscontinued ? 'Active' : 'Discontinued';
-
-        tr.innerHTML = `
-            <td style="${isDiscontinued ? 'text-decoration: line-through; color: #999;' : ''}">${item.Item_ID}</td>
-            <td style="${isDiscontinued ? 'color: #999;' : ''}">${item.Item_Name} <br><small style="color:var(--text-secondary)">${statusBadge}</small></td>
-            <td>${item.Current_Stock || 0}</td>
-            <td>
-                <button class="${actionBtnClass}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 5px; margin: 0; width: 100%;" onclick="toggleItemStatus('${String(item.Item_ID).replace(/'/g, "\\'")}', '${newStatusTarget}')">
-                    ${actionBtnText}
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
 
 let pendingToggleId = null;
 let pendingToggleStatusTarget = null;
