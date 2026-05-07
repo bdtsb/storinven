@@ -889,6 +889,9 @@ async function submitCart(type) {
 
         if (data.status === 'success') {
             showToast(data.message, 'success');
+            if (data.pdf_url) {
+                window.open(data.pdf_url, '_blank');
+            }
             if (type === 'AMBIL') {
                 outCart = [];
                 renderCart('AMBIL');
