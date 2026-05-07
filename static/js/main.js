@@ -47,6 +47,22 @@ function clearSearch(prefix) {
     }
 }
 
+// Mobile Touch Highlight Helper
+document.addEventListener('touchstart', function(e) {
+    const row = e.target.closest('tbody tr, .combo-item');
+    if (row) {
+        row.classList.add('active-touch');
+    }
+}, {passive: true});
+
+document.addEventListener('touchend', function(e) {
+    const row = e.target.closest('tbody tr, .combo-item');
+    if (row) {
+        // Delay removal slightly so the user sees the flash of color
+        setTimeout(() => row.classList.remove('active-touch'), 150);
+    }
+}, {passive: true});
+
 function logout() {
     currentUser = "";
     currentUserPin = "";

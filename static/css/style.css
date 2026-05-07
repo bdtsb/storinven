@@ -498,7 +498,8 @@ tbody tr {
 }
 
 tbody tr:hover td, 
-tbody tr:active td {
+tbody tr:active td,
+tbody tr.active-touch td {
   background-color: #e8f1ff !important;
 }
 
@@ -569,7 +570,8 @@ tbody tr:active td {
 }
 
 .combo-item:hover,
-.combo-item:active {
+.combo-item:active,
+.combo-item.active-touch {
   background-color: #e8f1ff !important;
 }
 
