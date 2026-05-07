@@ -527,59 +527,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     document.getElementById(`${prefix}-dropdown`).classList.remove('active');
 }
 
-function filterDropdown(prefix, query) {
-    const q = query.toLowerCase();
-    const dropdown = document.getElementById(`${prefix}-dropdown`);
 
-    // Filter items based on query AND ensuring they are not Discontinued
-    const matched = masterItems.filter(item => {
-        if (item.Status === 'Discontinued') return false;
-        return String(item.Item_ID).toLowerCase().includes(q) ||
-            String(item.Item_Name).toLowerCase().includes(q);
-    });
-
-    if (matched.length === 0) {
-        dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item dijumpai</div>';
-        return;
-    }
-
-    // Limit to 50 results so 500+ items don't freeze the DOM
-    const displayLimit = 50;
-    let html = matched.slice(0, displayLimit).map(item => {
-        const safeName = (item.Item_Name || "").replace(/'/g, "\\'");
-        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
-        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const perluPulang = (item.Perlu_Pulang || "YA").trim().toUpperCase();
-
-        const thumbUrl = imageUrl ? (() => {
-            let u = imageUrl;
-            if (u.includes('drive.google.com/file/d/')) {
-                const m = u.match(/\/d\/([^/]+)\//);
-                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
-            } else if (u.includes('uc?export=view&id=')) {
-                const m = u.match(/id=(.*)/);
-                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
-            }
-            return u;
-        })() : '';
-
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')" style="display:flex; align-items:center; gap:0.6rem;">
-            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
-            <div>
-                <strong>${item.Item_ID}</strong> - ${item.Item_Name}<br>
-                <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
-            </div>
-        </div>`;
-    }).join('');
-
-    if (matched.length > displayLimit) {
-        html += `<div class="combo-item" style="text-align:center; color: var(--text-secondary); cursor:default; background:white;">... dan ${matched.length - displayLimit} lagi. Sila taip untuk tapis.</div>`;
-    }
-
-    dropdown.innerHTML = html;
-}
 
 // --- Unified Add/Receive Item Dropdown Logic ---
 function generateNextId() {
@@ -1920,17 +1868,30 @@ window.filterDropdown = function(prefix, query) {
 
     const displayLimit = 50;
     let html = matched.slice(0, displayLimit).map(item => {
-        const safeName = (item.Item_Name || "").replace(/'/g, "\'");
+        const safeName = (item.Item_Name || "").replace(/'/g, "\\'");
         const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
-        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
-        const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
-        const imageUrl = (item.Image_URL || "").replace(/'/g, "\'").replace(/"/g, '&quot;');
+        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const perluPulang = (item.Perlu_Pulang || "YA").trim().toUpperCase();
         
+        const thumbUrl = imageUrl ? (() => {
+            let u = imageUrl;
+            if (u.includes('drive.google.com/file/d/')) {
+                const m = u.match(/\/d\/([^/]+)\//);
+                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
+            }
+            return u;
+        })() : '';
+
         let stockLabel = prefix === 'ret' ? "Hutang Pinjaman" : "Stok";
 
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}')">
-            <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
-            <small style="color:var(--text-secondary)">${stockLabel}: ${item.Current_Stock || 0} ${item.Unit}</small>
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')" style="display:flex; align-items:center; gap:0.6rem;">
+            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
+            <div>
+                <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
+                <small style="color:var(--text-secondary)">${stockLabel}: ${item.Current_Stock || 0} ${item.Unit}</small>
+            </div>
         </div>`;
     }).join('');
 
