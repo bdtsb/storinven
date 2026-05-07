@@ -1727,8 +1727,18 @@ window.submitLogin = async function() {
     if (isAdmin) {
         if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
         if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
+        // Auto fetch requests for Admin
+        await fetchPendingRequests();
+        updateApprovalBadge();
     }
 };
+
+// Auto refresh pending requests every 60 seconds if Admin is logged in
+setInterval(() => {
+    if (isAdmin) {
+        fetchPendingRequests();
+    }
+}, 60000);
 
 // D.O Attachment Logic
 window.clearAttachment = function() {
@@ -1788,11 +1798,34 @@ async function fetchPendingRequests() {
         if (data.status === 'success') {
             pendingRequests = data.data;
             renderApprovalList();
+            updateApprovalBadge();
         }
     } catch(e) {
         showToast('Ralat memuatkan permohonan', 'error');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
+    }
+}
+
+function updateApprovalBadge() {
+    const badge = document.getElementById('approval-badge');
+    const indicator = document.getElementById('admin-indicator');
+    if (!badge || !indicator) return;
+
+    if (!isAdmin) {
+        badge.style.display = 'none';
+        indicator.style.display = 'none';
+        return;
+    }
+
+    const count = (pendingRequests || []).filter(r => r.Status === 'Pending').length;
+    if (count > 0) {
+        badge.innerText = count;
+        badge.style.display = 'inline-block';
+        indicator.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+        indicator.style.display = 'none';
     }
 }
 
