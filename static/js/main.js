@@ -1736,7 +1736,7 @@ window.submitLogin = async function() {
 // Auto refresh pending requests every 60 seconds if Admin is logged in
 setInterval(() => {
     if (isAdmin) {
-        fetchPendingRequests();
+        fetchPendingRequests(true); // Silent refresh
     }
 }, 60000);
 
@@ -1790,8 +1790,8 @@ window.handleAttachmentSelection = function(event) {
 };
 
 // --- APPROVAL LOGIC ---
-async function fetchPendingRequests() {
-    document.getElementById('global-loader').style.display = 'flex';
+async function fetchPendingRequests(isSilent = false) {
+    if (!isSilent) document.getElementById('global-loader').style.display = 'flex';
     try {
         const res = await fetch(`${SCRIPT_URL}?action=getPendingRequests`);
         const data = await res.json();
@@ -1801,9 +1801,9 @@ async function fetchPendingRequests() {
             updateApprovalBadge();
         }
     } catch(e) {
-        showToast('Ralat memuatkan permohonan', 'error');
+        if (!isSilent) showToast('Ralat memuatkan permohonan', 'error');
     } finally {
-        document.getElementById('global-loader').style.display = 'none';
+        if (!isSilent) document.getElementById('global-loader').style.display = 'none';
     }
 }
 
