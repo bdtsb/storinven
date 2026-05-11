@@ -493,7 +493,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         qtyInput.max = stock;
         qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${stock}`;
     } else if (prefix === 'ret') {
-        const maxReturn = parseInt(totalQty || stock) - parseInt(stock);
+        const maxReturn = parseInt(stock);
         qtyInput.max = maxReturn;
         qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${maxReturn}`;
         stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
