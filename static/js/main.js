@@ -1826,8 +1826,8 @@ function updateApprovalBadge() {
 
     const count = (pendingRequests || []).filter(r => r.Status === 'Pending').length;
     if (count > 0) {
-        badge.innerText = count;
-        badge.style.display = 'inline-block';
+        // Admin only sees indicator dot, no badge on tab to avoid confusion with personal profile
+        badge.style.display = 'none'; 
         indicator.style.display = 'inline-block';
     } else {
         badge.style.display = 'none';
