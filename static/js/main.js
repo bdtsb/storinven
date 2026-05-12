@@ -438,13 +438,17 @@ function showDropdown(prefix) {
     filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "", perluPulang = "YA") {
+function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "", perluPulang = "YA", borrowId = "") {
     document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
     document.getElementById(`${prefix}-item-id`).value = id;
     document.getElementById(`${prefix}-item-name`).value = name;
 
     const stockEl = document.getElementById(`${prefix}-current-stock`);
     stockEl.innerHTML = `Stok Terkini: <strong style="color:var(--primary-color)">${stock} ${unit}</strong>`;
+    
+    if (prefix === 'ret' && document.getElementById('ret-borrow-id')) {
+        document.getElementById('ret-borrow-id').value = borrowId;
+    }
 
     const serialGroup = document.getElementById(`${prefix}-serial-group`);
     const serialSelect = document.getElementById(`${prefix}-serial`);
@@ -1581,6 +1585,7 @@ window.addToCart = function(event, type) {
     const qty = parseInt(document.getElementById(`${prefix}-qty`).value);
     const project = prefix === 'out' ? document.getElementById('out-project').value : '-';
     const dueDate = prefix === 'out' && document.getElementById('out-due-date') ? document.getElementById('out-due-date').value : '';
+    const borrowId = prefix === 'ret' && document.getElementById('ret-borrow-id') ? document.getElementById('ret-borrow-id').value : '';
 
     if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
 
@@ -1605,6 +1610,7 @@ window.addToCart = function(event, type) {
         Project: project,
         Selected_Serial: selectedSerial,
         Due_Date: dueDate,
+        Borrow_ID: borrowId,
         Remarks: ""
     };
 
@@ -1953,29 +1959,19 @@ window.filterDropdown = function(prefix, query) {
     let matched = [];
     if (prefix === 'ret') {
         // Only show items user has borrowed
-        const uniqueBorrowsMap = {};
-        activeBorrows.forEach(b => {
-            if(!uniqueBorrowsMap[b.Item_ID]) {
-                uniqueBorrowsMap[b.Item_ID] = {
-                    Item_ID: b.Item_ID,
-                    Item_Name: b.Item_Name,
-                    Current_Stock: b.Qty_Borrowed,
-                    Unit: 'Unit',
-                    Total_Quantity: b.Qty_Borrowed, // Max return = Qty Borrowed
-                    Punya_Serial: b.Selected_Serial ? "YA" : "TIDAK",
-                    Serial_Tersedia: "", // Not returning to pool, we are listing what they borrowed
-                    Serial_Dipinjam: b.Selected_Serial || "",
-                    Image_URL: ""
-                };
-            } else {
-                uniqueBorrowsMap[b.Item_ID].Current_Stock += b.Qty_Borrowed;
-                uniqueBorrowsMap[b.Item_ID].Total_Quantity += b.Qty_Borrowed;
-                if(b.Selected_Serial) {
-                    uniqueBorrowsMap[b.Item_ID].Serial_Dipinjam += (uniqueBorrowsMap[b.Item_ID].Serial_Dipinjam ? ", " : "") + b.Selected_Serial;
-                }
-            }
-        });
-        matched = Object.values(uniqueBorrowsMap).filter(item => {
+        matched = activeBorrows.map(b => ({
+            Item_ID: b.Item_ID,
+            Item_Name: b.Item_Name + (b.Project && b.Project !== '-' ? ` [Projek: ${b.Project}]` : '') + ` (Pinjam: ${b.Borrow_Date})`,
+            Current_Stock: b.Qty_Borrowed,
+            Unit: 'Unit',
+            Total_Quantity: b.Qty_Borrowed,
+            Punya_Serial: b.Selected_Serial ? "YA" : "TIDAK",
+            Serial_Tersedia: "",
+            Serial_Dipinjam: b.Selected_Serial || "",
+            Image_URL: "",
+            Borrow_ID: b.Borrow_ID,
+            Perlu_Pulang: "YA"
+        })).filter(item => {
             return String(item.Item_ID).toLowerCase().includes(q) || String(item.Item_Name).toLowerCase().includes(q);
         });
         
@@ -2016,7 +2012,7 @@ window.filterDropdown = function(prefix, query) {
 
         let stockLabel = prefix === 'ret' ? "Hutang Pinjaman" : "Stok";
 
-        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}')" style="display:flex; align-items:center; gap:0.6rem;">
+        return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}', '${item.Borrow_ID || ''}')" style="display:flex; align-items:center; gap:0.6rem;">
             ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
             <div>
                 <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
