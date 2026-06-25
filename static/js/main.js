@@ -603,8 +603,20 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').value = exactMatch.Item_Name;
         document.getElementById('add-name').readOnly = true;
         document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
-        document.getElementById('new-item-fields').style.display = 'none';
-        document.getElementById('new-item-threshold').style.display = 'none';
+        
+        // Set existing item properties for editing
+        document.getElementById('add-category').value = exactMatch.Category || "";
+        document.getElementById('add-unit').value = exactMatch.Unit || "";
+        document.getElementById('add-min').value = exactMatch.Min_Stock || "0";
+        
+        if (String(exactMatch.Perlu_Pulang).trim().toUpperCase() === "YA") {
+            document.getElementById('add-perlu-pulang-ya').checked = true;
+        } else {
+            document.getElementById('add-perlu-pulang-tidak').checked = true;
+        }
+
+        document.getElementById('new-item-fields').style.display = 'block';
+        if(document.getElementById('new-item-threshold')) document.getElementById('new-item-threshold').style.display = 'block';
 
         const isDiscontinued = exactMatch.Status === 'Discontinued';
         const statusText = isDiscontinued ?
