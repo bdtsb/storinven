@@ -559,7 +559,7 @@ function showUnifiedDropdown() {
     filterUnifiedDropdown(document.getElementById(`add-search`).value);
 }
 
-function selectUnifiedItem(id, name, stock, unit, category, minStock) {
+function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulang) {
     document.getElementById('add-search').value = id; // Just show ID in search bar
     document.getElementById('add-dropdown').classList.remove('active');
 
@@ -569,9 +569,20 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock) {
     document.getElementById('add-name').readOnly = true;
     document.getElementById('add-name').style.backgroundColor = '#f0f0f0';
 
-    // Hide new item specific fields
-    document.getElementById('new-item-fields').style.display = 'none';
-    document.getElementById('new-item-threshold').style.display = 'none';
+    // Set existing item properties for editing
+    document.getElementById('add-category').value = category || "";
+    document.getElementById('add-unit').value = unit || "";
+    document.getElementById('add-min').value = minStock || "0";
+    
+    if (String(perluPulang).trim().toUpperCase() === "YA") {
+        document.getElementById('add-perlu-pulang-ya').checked = true;
+    } else {
+        document.getElementById('add-perlu-pulang-tidak').checked = true;
+    }
+
+    // Keep fields visible for editing
+    document.getElementById('new-item-fields').style.display = 'block';
+    if(document.getElementById('new-item-threshold')) document.getElementById('new-item-threshold').style.display = 'block';
 
     // Update status UI
     document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${stock || 0} ${unit})`;
@@ -661,7 +672,7 @@ function filterUnifiedDropdown(query) {
         })() : '';
 
         return `
-        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}')" style="display:flex; align-items:center; gap:0.6rem;">
+        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "TIDAK"}')" style="display:flex; align-items:center; gap:0.6rem;">
             ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
             <div>
                 <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
@@ -1671,17 +1682,16 @@ window.handleUnifiedAdd = async function(event) {
         payload.Serial_Tersedia = document.getElementById('add-serials').value;
     }
 
-    if (isNewItem) {
-        payload.Category = document.getElementById('add-category').value;
-        payload.Unit = document.getElementById('add-unit').value;
-        payload.Min_Stock = document.getElementById('add-min').value;
-        const ppEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
-        payload.Perlu_Pulang = ppEl ? ppEl.value : 'TIDAK';
+    // Allow updating category, unit, min_stock, and perlu_pulang for both new and existing items
+    payload.Category = document.getElementById('add-category').value;
+    payload.Unit = document.getElementById('add-unit').value;
+    payload.Min_Stock = document.getElementById('add-min').value;
+    const ppEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
+    payload.Perlu_Pulang = ppEl ? ppEl.value : 'YA';
 
-        if (!payload.Category || !payload.Unit) {
-            showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
-            return;
-        }
+    if (isNewItem && (!payload.Category || !payload.Unit)) {
+        showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
+        return;
     } else {
         if (!payload.Attachment_Data) {
             // Optional but good to enforce DO for restock if requested
