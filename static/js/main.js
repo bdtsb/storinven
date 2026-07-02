@@ -205,6 +205,35 @@ function switchTab(viewId) {
     document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.add('active');
 
+    if (viewId === 'add_item') {
+        const flag = document.getElementById('edit-mode-flag');
+        if (flag) flag.value = 'false';
+        const title = document.getElementById('add-item-title');
+        if (title) title.textContent = "Register New Item / Add Stock";
+        const label = document.getElementById('add-qty-label');
+        if (label) label.textContent = "Quantity (Stock In)";
+        const form = document.getElementById('add-item-form');
+        if (form) form.reset();
+        const searchInput = document.getElementById('add-search');
+        if (searchInput) searchInput.value = '';
+        const idInput = document.getElementById('add-item-id');
+        if (idInput) idInput.value = '';
+        const nameInput = document.getElementById('add-name');
+        if (nameInput) {
+            nameInput.readOnly = false;
+            nameInput.style.backgroundColor = 'white';
+        }
+        const fields = document.getElementById('new-item-fields');
+        if (fields) fields.style.display = 'block';
+        const threshold = document.getElementById('new-item-threshold');
+        if (threshold) threshold.style.display = 'block';
+        const status = document.getElementById('add-status');
+        if (status) status.innerHTML = '';
+        if (typeof clearMultiImage === 'function') clearMultiImage();
+        if (typeof clearAttachment === 'function') clearAttachment();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     // Refresh data if going to dashboard
     if (viewId === 'dashboard') {
         fetchTransactions();
@@ -858,7 +887,7 @@ function addToCart(event, type) {
 
     if (type === 'REQUEST') {
         if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
-            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+            return showToast('This Item/Serial is already in the cart!', 'warning');
         }
         outCart.push(cartItem);
         renderCart('REQUEST');
@@ -870,7 +899,7 @@ function addToCart(event, type) {
         document.getElementById('out-current-stock').innerHTML = "";
     } else {
         if (retCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
-            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+            return showToast('This Item/Serial is already in the cart!', 'warning');
         }
         retCart.push(cartItem);
         renderCart('RETURN');
@@ -916,7 +945,7 @@ function removeFromCart(type, index) {
 
 async function submitCart(type) {
     let cart = type === 'REQUEST' ? outCart : retCart;
-    if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
+    if (cart.length === 0) return showToast('Your cart is empty!', 'error');
 
     const staffName = document.getElementById('login-user').value || currentUser;
     const staffPin = document.getElementById('login-pin').value || currentUserPin;
@@ -1250,89 +1279,6 @@ function toTitleCase(str) {
     return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-// Handler for Unified Item Registration / Stock In
-async function handleUnifiedAdd(event) {
-    event.preventDefault();
-
-    const isNewItem = document.getElementById('add-item-id').value === '';
-    const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
-
-    if (!itemIdInput) {
-        showToast('Please fill in Item ID', 'error');
-        return;
-    }
-
-    const payload = {
-        Item_ID: itemIdInput,
-        Item_Name: toTitleCase(document.getElementById('add-name').value.trim()),
-        Quantity: document.getElementById('add-qty').value,
-        Remarks: toTitleCase(document.getElementById('add-remarks').value.trim()),
-        Supplier: toTitleCase(document.getElementById('add-remarks').value.trim()),
-        Image_Data: document.getElementById('add-image-base64').value,
-        Entered_By: currentUser,
-        Staff_PIN: currentUserPin
-    };
-
-    // Map Serial Numbers (Applies to both New and Existing Items)
-    const hasSerial = document.getElementById('add-has-serial');
-    if (hasSerial && hasSerial.checked) {
-        payload.Punya_Serial = true;
-        payload.Serial_Tersedia = document.getElementById('add-serials').value;
-    }
-
-    if (isNewItem) {
-        payload.Category = document.getElementById('add-category').value;
-        payload.Unit = document.getElementById('add-unit').value;
-        payload.Min_Stock = document.getElementById('add-min').value;
-        // Get Perlu_Pulang from radio buttons
-        const perluPulangEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
-        payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'NO';
-
-        if (!payload.Category || !payload.Unit) {
-            showToast('Please select Category and Unit for new item.', 'error');
-            return;
-        }
-    }
-
-    document.getElementById('global-loader').style.display = 'flex';
-
-    try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "unifiedAdd", payload: payload })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.status === 'success') {
-            showToast(data.message);
-            event.target.reset();
-            clearImage();
-
-            // Re-enable fields that might have been disabled
-            document.getElementById('add-name').readOnly = false;
-            document.getElementById('add-name').style.backgroundColor = 'white';
-            document.getElementById('new-item-fields').style.display = 'block';
-            document.getElementById('new-item-threshold').style.display = 'block';
-            document.getElementById('add-item-id').value = '';
-            document.getElementById('add-status').innerHTML = '';
-
-            // Refresh items so it appears in dropdowns immediately
-            await fetchItems();
-            await fetchTransactions();
-
-            setTimeout(() => {
-                switchTab('dashboard');
-            }, 1500);
-        } else {
-            showErrorModal(data.message || 'Failed menyimpan transaksi.');
-        }
-    } catch (e) {
-        showErrorModal('Error sambungan pelayan.');
-    } finally {
-        document.getElementById('global-loader').style.display = 'none';
-    }
-}
 
 // Toast UI utility
 function showToast(msg, type = 'success') {
@@ -1742,7 +1688,7 @@ window.addToCart = function(event, type) {
 
     if (type === 'REQUEST') {
         if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
-            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+            return showToast('This Item/Serial is already in the cart!', 'warning');
         }
         outCart.push(cartItem);
         renderCart('REQUEST');
@@ -1755,7 +1701,7 @@ window.addToCart = function(event, type) {
         document.getElementById('out-current-stock').innerHTML = "";
     } else {
         if (retCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
-            return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
+            return showToast('This Item/Serial is already in the cart!', 'warning');
         }
         retCart.push(cartItem);
         renderCart('RETURN');
@@ -2273,7 +2219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Override submitCart to prompt for signature first
 window.submitCart = function(type) {
     let cart = type === 'REQUEST' ? outCart : retCart;
-    if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
+    if (cart.length === 0) return showToast('Your cart is empty!', 'error');
 
     const staffName = document.getElementById('login-user').value || currentUser;
     if (!staffName) return showToast('Please login first!', 'error');
