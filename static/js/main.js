@@ -1226,9 +1226,24 @@ function handleImageSelection(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+        if (file.type === 'application/pdf') {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('PDF file is too large. Max 5MB allowed.', 'error');
+            clearAttachment();
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('add-attachment-base64').value = e.target.result;
+            showToast('PDF attached successfully.');
+        };
+        reader.readAsDataURL(file);
+        return;
+    }
+    
     if (!file.type.startsWith('image/')) {
-        showToast('Please select image files only.', 'error');
-        clearImage();
+        showToast('Please upload Image (JPG/PNG) or PDF format for D.O.', 'error');
+        clearAttachment();
         return;
     }
 
@@ -1830,8 +1845,23 @@ window.handleAttachmentSelection = function(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+        if (file.type === 'application/pdf') {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('PDF file is too large. Max 5MB allowed.', 'error');
+            clearAttachment();
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('add-attachment-base64').value = e.target.result;
+            showToast('PDF attached successfully.');
+        };
+        reader.readAsDataURL(file);
+        return;
+    }
+    
     if (!file.type.startsWith('image/')) {
-        showToast('Currently, please upload Image format (JPG/PNG) only for D.O.', 'error');
+        showToast('Please upload Image (JPG/PNG) or PDF format for D.O.', 'error');
         clearAttachment();
         return;
     }
@@ -2461,12 +2491,26 @@ window.handleMultiImageSelection = function(event) {
     let processedCount = 0;
     
     files.forEach(file => {
-        if (!file.type.startsWith('image/')) {
-            showToast('Please select image files only.', 'error');
-            processedCount++;
-            checkCompletion();
+            if (file.type === 'application/pdf') {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('PDF file is too large. Max 5MB allowed.', 'error');
+            clearAttachment();
             return;
         }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('add-attachment-base64').value = e.target.result;
+            showToast('PDF attached successfully.');
+        };
+        reader.readAsDataURL(file);
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('Please upload Image (JPG/PNG) or PDF format for D.O.', 'error');
+        clearAttachment();
+        return;
+    }
 
         if (file.size > 5 * 1024 * 1024) {
             showToast('Error', 'Image size too large. Max 5MB per image.', 'error');
