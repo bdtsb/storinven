@@ -637,13 +637,32 @@ function filterUnifiedDropdown(query) {
             document.getElementById('add-perlu-pulang-tidak').checked = true;
         }
 
+        // Load existing images
+        if (exactMatch.Image_URL) {
+            try {
+                let parsed = JSON.parse(exactMatch.Image_URL);
+                if (Array.isArray(parsed)) {
+                    multiImagesData = parsed;
+                } else {
+                    multiImagesData = [exactMatch.Image_URL];
+                }
+            } catch (e) {
+                // Not JSON, probably old single string
+                multiImagesData = [exactMatch.Image_URL];
+            }
+        } else {
+            multiImagesData = [];
+        }
+        document.getElementById('add-image-base64').value = JSON.stringify(multiImagesData);
+        if (typeof window.renderMultiImagePreview === 'function') window.renderMultiImagePreview();
+
         document.getElementById('new-item-fields').style.display = 'block';
         if(document.getElementById('new-item-threshold')) document.getElementById('new-item-threshold').style.display = 'block';
 
         const isDiscontinued = exactMatch.Status === 'Discontinued';
         const statusText = isDiscontinued ?
-            `<strong style="color:var(--danger-color)">Item Discontinued (Akan diaktifkan semula secara automatik)</strong>` :
-            `Item Sedia Ada (Current Stock: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
+            `<strong style="color:var(--danger-color)">Item Discontinued (Will be reactivated automatically)</strong>` :
+            `Existing Item (Current Stock: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
 
         document.getElementById('add-status').innerHTML = statusText;
         document.getElementById('add-status').style.color = isDiscontinued ? '' : 'var(--text-secondary)';
@@ -654,8 +673,10 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-name').style.backgroundColor = 'white';
         document.getElementById('new-item-fields').style.display = 'block';
         document.getElementById('new-item-threshold').style.display = 'block';
+        if (typeof window.clearMultiImage === 'function') window.clearMultiImage();
+        
         if (q.length > 0) {
-            document.getElementById('add-status').innerHTML = `Item Baru (Sila lengkapkan butiran di bawah)`;
+            document.getElementById('add-status').innerHTML = `New Item (Please complete details below)`;
             document.getElementById('add-status').style.color = 'var(--success-color)';
         } else {
             document.getElementById('add-status').innerHTML = ``;
@@ -2450,4 +2471,122 @@ function openDirectPdf(url) {
         directUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
     }
     window.open(directUrl, '_blank');
+}
+
+
+
+window.handleMultiImageSelection = function(event) {
+    const files = Array.from(event.target.files);
+    if (!files || files.length === 0) return;
+
+    if (multiImagesData.length + files.length > 4) {
+        showToast('Error', 'Maximum 4 images allowed in total.', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    let processedCount = 0;
+    
+    files.forEach(file => {
+        if (!file.type.startsWith('image/')) {
+            showToast('Sila pilih fail gambar sahaja.', 'error');
+            processedCount++;
+            checkCompletion();
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Error', 'Image size too large. Max 5MB per image.', 'error');
+            processedCount++;
+            checkCompletion();
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                multiImagesData.push(dataUrl);
+                processedCount++;
+                checkCompletion();
+            };
+            img.onerror = function() {
+                processedCount++;
+                checkCompletion();
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            processedCount++;
+            checkCompletion();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    function checkCompletion() {
+        if (processedCount === files.length) {
+            document.getElementById('add-image-base64').value = JSON.stringify(multiImagesData);
+            window.renderMultiImagePreview();
+            document.getElementById('add-image').value = '';
+        }
+    }
+}
+
+window.renderMultiImagePreview = function() {
+    const container = document.getElementById('multi-image-preview-container');
+    if (!container) return;
+    
+    if (multiImagesData.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No images added yet.</div>';
+        return;
+    }
+
+    let html = '';
+    multiImagesData.forEach((dataUrl, index) => {
+        html += `
+            <div style="position: relative; display: inline-block; margin-right: 10px; margin-bottom: 10px;">
+                <img src="${dataUrl}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                <button type="button" onclick="removeMultiImage(${index})" style="position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">?</button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+window.removeMultiImage = function(index) {
+    multiImagesData.splice(index, 1);
+    document.getElementById('add-image-base64').value = JSON.stringify(multiImagesData);
+    window.renderMultiImagePreview();
+}
+
+window.clearMultiImage = function() {
+    multiImagesData = [];
+    const base64Input = document.getElementById('add-image-base64');
+    if (base64Input) base64Input.value = '';
+    window.renderMultiImagePreview();
 }
