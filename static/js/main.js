@@ -14,15 +14,37 @@ let currentUserPin = "";
 let isAdmin = false;
 
 // Utility for Thumbnail HTML
+function getFirstImageUrl(imageUrl) {
+    if (!imageUrl) return '';
+    try {
+        if (imageUrl.startsWith('[') && imageUrl.endsWith(']')) {
+            const arr = JSON.parse(imageUrl);
+            if (arr && arr.length > 0) return arr[0];
+        }
+    } catch(e) {}
+    return imageUrl;
+}
+
+function getAllImageUrls(imageUrl) {
+    if (!imageUrl) return [];
+    try {
+        if (imageUrl.startsWith('[') && imageUrl.endsWith(']')) {
+            return JSON.parse(imageUrl);
+        }
+    } catch(e) {}
+    return [imageUrl];
+}
+
 function getThumbHtml(imageUrl, size = 40) {
-    if (!imageUrl) return `<div style="width:${size}px; height:${size}px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1rem;">📦</div>`;
+    let actualUrl = getFirstImageUrl(imageUrl);
+    if (!actualUrl) return `<div style="width:${size}px; height:${size}px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1rem;">📦</div>`;
     
-    let thumbSrc = imageUrl;
-    if (imageUrl.includes('drive.google.com/file/d/')) {
-        const m = imageUrl.match(/\/d\/([^/]+)\//);
+    let thumbSrc = actualUrl;
+    if (actualUrl.includes('drive.google.com/file/d/')) {
+        const m = actualUrl.match(/\/d\/([^/]+)\//);
         if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${size*2}`;
-    } else if (imageUrl.includes('uc?export=view&id=')) {
-        const m = imageUrl.match(/id=(.*)/);
+    } else if (actualUrl.includes('uc?export=view&id=')) {
+        const m = actualUrl.match(/id=(.*)/);
         if (m && m[1]) thumbSrc = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${size*2}`;
     }
     
@@ -97,7 +119,7 @@ function logout() {
 
     // Switch to dashboard view for the next user
     switchTab('dashboard');
-    showToast('Berjaya Log Keluar', 'success');
+    showToast('Success Logout', 'success');
 
     // Give time to read toast before page refresh or redirect. Just showing it is enough.
 }
@@ -206,7 +228,7 @@ async function fetchStaff() {
             populateStaffDropdowns();
         }
     } catch (error) {
-        console.error("Ralat memuatkan nama ahli", error);
+        console.error("Error memuatkan nama ahli", error);
     }
 }
 
@@ -237,7 +259,7 @@ async function fetchItems() {
         }
     } catch (error) {
         console.error(error);
-        showToast('Ralat DB: ' + error.message, 'error');
+        showToast('Error DB: ' + error.message, 'error');
     }
 }
 
@@ -249,12 +271,12 @@ async function fetchTransactions() {
             document.getElementById('stat-total-logs').textContent = data.data.length;
             allTransactions = data.data; // Cache all for profile view
             sortRecentTransactions();
-            sortProfileTransactions();
+            sortProfileeTransactions();
             populateYearDropdown();
         }
     } catch (error) {
         console.error(error);
-        showToast('Ralat Transaksi: ' + error.message, 'error');
+        showToast('Error Transaksi: ' + error.message, 'error');
     }
 }
 
@@ -306,7 +328,7 @@ function renderRecentTransactions(transactions) {
         if (!tbody) return;
 
         if (!transactions || transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod transaksi.</td></tr>';
             return;
         }
 
@@ -341,16 +363,16 @@ function renderRecentTransactions(transactions) {
     } catch (err) {
         console.error("Recent Trans Render Error:", err);
         const tbody = document.querySelector('#recent-trans-table tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Ralat memuatkan data. Sila *refresh*.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Error memuatkan data. Sila *refresh*.</td></tr>`;
     }
 }
 
-function renderProfileHistory(sortedTransactions) {
+function renderProfileeHistory(sortedTransactions) {
     try {
         const tbody = document.querySelector('#profile-trans-table tbody');
         if (!tbody) return; // Fail-safe
 
-        // Update Profile Stat display safely
+        // Update Profilee Stat display safely
         const nameDisplay = document.getElementById('profile-name-display');
         if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
 
@@ -363,7 +385,7 @@ function renderProfileHistory(sortedTransactions) {
         }
 
         if (!personalTrans || personalTrans.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tiada rekod transaksi peribadi.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">None rekod transaksi peribadi.</td></tr>';
             return;
         }
 
@@ -391,9 +413,9 @@ function renderProfileHistory(sortedTransactions) {
             </tr>
         `}).join('');
     } catch (err) {
-        console.error("Profile Trans Render Error:", err);
+        console.error("Profilee Trans Render Error:", err);
         const tbody = document.querySelector('#profile-trans-table tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Ralat memuatkan profil. Sila *refresh*.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Error memuatkan profil. Sila *refresh*.</td></tr>`;
     }
 }
 
@@ -464,14 +486,14 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         let serialArr = serialsToMap.split(',').map(s => s.trim()).filter(s => s !== "");
 
         if (serialArr.length === 0) {
-            serialSelect.innerHTML = `<option value="" disabled selected>Tiada Siri Tersedia. (Habis/Penuh)</option>`;
+            serialSelect.innerHTML = `<option value="" disabled selected>None Siri Tersedia. (Habis/Penuh)</option>`;
         } else {
-            serialSelect.innerHTML = `<option value="" disabled selected>Pilih Serial...</option>` +
+            serialSelect.innerHTML = `<option value="" disabled selected>Select Serial...</option>` +
                 serialArr.map(s => `<option value="${s.replace(/"/g, '&quot;')}">${s}</option>`).join('');
         }
     } else {
         if (serialGroup) serialGroup.style.display = "none";
-        if (serialSelect) serialSelect.innerHTML = `<option value="" disabled selected>Pilih Serial...</option>`;
+        if (serialSelect) serialSelect.innerHTML = `<option value="" disabled selected>Select Serial...</option>`;
         qtyInput.value = "";
         qtyInput.readOnly = false;
     }
@@ -506,7 +528,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     const imgEl = document.getElementById(`${prefix}-item-image`);
     if (imgEl) {
         if (imageUrl && imageUrl.trim() !== "") {
-            let finalUrl = imageUrl;
+            let finalUrl = getFirstImageUrl(imageUrl);
             // Convert standard Drive link or old uc link to reliable Thumbnail API link
             if (finalUrl.includes("drive.google.com/file/d/")) {
                 const match = finalUrl.match(/\/d\/([^/]+)\//);
@@ -585,7 +607,7 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulan
     if(document.getElementById('new-item-threshold')) document.getElementById('new-item-threshold').style.display = 'block';
 
     // Update status UI
-    document.getElementById('add-status').innerHTML = `Item Sedia Ada (Stok Semasa: ${stock || 0} ${unit})`;
+    document.getElementById('add-status').innerHTML = `Item Sedia Ada (Current Stock: ${stock || 0} ${unit})`;
     document.getElementById('add-status').style.color = 'var(--text-secondary)';
 }
 
@@ -620,8 +642,8 @@ function filterUnifiedDropdown(query) {
 
         const isDiscontinued = exactMatch.Status === 'Discontinued';
         const statusText = isDiscontinued ?
-            `<strong style="color:var(--danger-color)">Barang Discontinued (Akan diaktifkan semula secara automatik)</strong>` :
-            `Item Sedia Ada (Stok Semasa: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
+            `<strong style="color:var(--danger-color)">Item Discontinued (Akan diaktifkan semula secara automatik)</strong>` :
+            `Item Sedia Ada (Current Stock: ${exactMatch.Current_Stock || 0} ${exactMatch.Unit})`;
 
         document.getElementById('add-status').innerHTML = statusText;
         document.getElementById('add-status').style.color = isDiscontinued ? '' : 'var(--text-secondary)';
@@ -756,7 +778,7 @@ function addToCart(event, type) {
     if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
-    if (prefix === 'out' && qty > maxStock) return showToast('Kuantiti ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
     if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
 
     const serialGroup = document.getElementById(`${prefix}-serial-group`);
@@ -822,7 +844,7 @@ function renderCart(type) {
             <td style="font-size:0.85rem"><strong>${c.Item_ID}</strong><br><small style="color:var(--text-secondary)">${c.Item_Name}</small></td>
             <td style="font-size:0.85rem">${c.Selected_Serial || '-'}</td>
             <td><strong>${c.Quantity}</strong></td>
-            <td><button type="button" class="btn-cancel" style="padding: 4px 8px; font-size:0.75rem; margin:0; width:100%; border-radius:4px" onclick="removeFromCart('${type}', ${index})">Padam</button></td>
+            <td><button type="button" class="btn-cancel" style="padding: 4px 8px; font-size:0.75rem; margin:0; width:100%; border-radius:4px" onclick="removeFromCart('${type}', ${index})">Delete</button></td>
         </tr>`;
     }).join('');
 }
@@ -880,10 +902,10 @@ async function submitCart(type) {
             await fetchTransactions();
             setTimeout(() => switchTab('dashboard'), 1500);
         } else {
-            showErrorModal(data.message || 'Ralat menyimpan transaksi kelompok.');
+            showErrorModal(data.message || 'Error menyimpan transaksi kelompok.');
         }
     } catch (error) {
-        showErrorModal('Ralat sambungan rangkaian: ' + error.message);
+        showErrorModal('Error sambungan rangkaian: ' + error.message);
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -987,7 +1009,7 @@ async function submitLogin() {
             document.getElementById('login-pin').focus();
         }
     } catch (e) {
-        showToast('Ralat sambungan pelayan.', 'error');
+        showToast('Error sambungan pelayan.', 'error');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -1011,7 +1033,7 @@ async function submitSetStaffPin() {
     const pin2 = document.getElementById('staff-confirm-pin').value;
 
     if (pin1.length !== 4 || isNaN(pin1)) return showToast('PIN mestilah 4 angka.', 'error');
-    if (pin1 !== pin2) return showToast('Ralat: PIN pengesahan tidak sepadan!', 'error');
+    if (pin1 !== pin2) return showToast('Error: PIN pengesahan tidak sepadan!', 'error');
 
     document.getElementById('global-loader').style.display = 'flex';
     try {
@@ -1042,7 +1064,7 @@ async function submitSetStaffPin() {
             document.getElementById('global-loader').style.display = 'none';
         }
     } catch (e) {
-        showToast('Ralat sambungan.', 'error');
+        showToast('Error sambungan.', 'error');
         document.getElementById('global-loader').style.display = 'none';
     }
 }
@@ -1102,7 +1124,7 @@ async function executeToggleItemStatus() {
             showErrorModal(data.message || 'Gagal mengemaskini status item.');
         }
     } catch (e) {
-        showErrorModal('Ralat sambungan pelayan.');
+        showErrorModal('Error sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -1181,7 +1203,7 @@ async function handleUnifiedAdd(event) {
     const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
 
     if (!itemIdInput) {
-        showToast('Sila isikan ID Barang (Item ID)', 'error');
+        showToast('Sila isikan Item ID (Item ID)', 'error');
         return;
     }
 
@@ -1212,7 +1234,7 @@ async function handleUnifiedAdd(event) {
         payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'TIDAK';
 
         if (!payload.Category || !payload.Unit) {
-            showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
+            showToast('Sila pilih Category dan Unit untuk barang baru.', 'error');
             return;
         }
     }
@@ -1251,7 +1273,7 @@ async function handleUnifiedAdd(event) {
             showErrorModal(data.message || 'Gagal menyimpan transaksi.');
         }
     } catch (e) {
-        showErrorModal('Ralat sambungan pelayan.');
+        showErrorModal('Error sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -1328,11 +1350,11 @@ function doSortTransactions(arr, sortType) {
     sorted.sort((a, b) => {
         if (sortType === 'Masa_Baru') return parseSortDate(b.Timestamp) - parseSortDate(a.Timestamp);
         if (sortType === 'Masa_Lama') return parseSortDate(a.Timestamp) - parseSortDate(b.Timestamp);
-        if (sortType === 'Jenis') return String(a.Type || '').localeCompare(String(b.Type || ''));
-        if (sortType === 'Barang') return String(a.Item_Name || '').localeCompare(String(b.Item_Name || ''));
-        if (sortType === 'Kuantiti') return parseInt(b.Quantity || 0, 10) - parseInt(a.Quantity || 0, 10);
-        if (sortType === 'Projek') return String(a.Project || '-').localeCompare(String(b.Project || '-'));
-        if (sortType === 'Oleh') return String(a.Entered_By || '').localeCompare(String(b.Entered_By || ''));
+        if (sortType === 'Type') return String(a.Type || '').localeCompare(String(b.Type || ''));
+        if (sortType === 'Item') return String(a.Item_Name || '').localeCompare(String(b.Item_Name || ''));
+        if (sortType === 'Quantity') return parseInt(b.Quantity || 0, 10) - parseInt(a.Quantity || 0, 10);
+        if (sortType === 'Project') return String(a.Project || '-').localeCompare(String(b.Project || '-'));
+        if (sortType === 'By') return String(a.Entered_By || '').localeCompare(String(b.Entered_By || ''));
         return 0;
     });
     return sorted;
@@ -1346,12 +1368,12 @@ function sortRecentTransactions() {
     renderRecentTransactions(sorted);
 }
 
-function sortProfileTransactions() {
+function sortProfileeTransactions() {
     const el = document.getElementById('sort-profile');
     const sortVal = el ? el.value : 'Masa_Baru';
     const personalTrans = allTransactions.filter(t => t.Entered_By === currentUser);
     const sorted = doSortTransactions(personalTrans, sortVal);
-    renderProfileHistory(sorted);
+    renderProfileeHistory(sorted);
 }
 
 function populateYearDropdown() {
@@ -1395,7 +1417,7 @@ function filterAllTransactions() {
     if (!tbody) return;
 
     if (!allTransactions || allTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod transaksi.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod transaksi.</td></tr>';
         return;
     }
 
@@ -1413,7 +1435,7 @@ function filterAllTransactions() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
         return;
     }
 
@@ -1460,7 +1482,7 @@ function filterAdminList(query) {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada rekod dijumpai.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod dijumpai.</td></tr>';
         return;
     }
 
@@ -1481,13 +1503,14 @@ function filterAdminList(query) {
         if (item.Status === 'Discontinued') {
             statusBadge = '<span class="badge badge-danger">Discontinued</span>';
         } else if (bakiSemasa <= parseInt(item.Min_Stock || 0, 10)) {
-            statusBadge = '<span class="badge" style="background:#fdedec; color:#e74c3c;">Stok Rendah</span>';
+            statusBadge = '<span class="badge" style="background:#fdedec; color:#e74c3c;">Low Stock</span>';
         } else {
-            statusBadge = '<span class="badge" style="background:#eafaf1; color:#27ae60;">Aktif</span>';
+            statusBadge = '<span class="badge" style="background:#eafaf1; color:#27ae60;">Active</span>';
         }
         
         let actionButtons = `
-            <button onclick="quickAddStock('${item.Item_ID}')" style="background:#2980b9; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">📦 Tambah Stok</button>
+            <button onclick="quickAddStock('${item.Item_ID}')" style="background:#2980b9; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">📦 Add Stock</button>
+            <button onclick="openEditItemMode('${item.Item_ID}')" style="background:#27ae60; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%; margin-bottom:5px;">✏️ Edit Item</button>
         `;
 
         // Add View Invoice button if available
@@ -1497,7 +1520,7 @@ function filterAdminList(query) {
         }
         
         if (item.Status === 'Discontinued') {
-            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', true)" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🔄 Aktifkan Semula</button>`;
+            actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', true)" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🔄 Reactivate</button>`;
         } else {
             actionButtons += `<button onclick="confirmDiscontinue('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', false)" style="background:#c0392b; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; width:100%;">🚫 Set Discontinued</button>`;
         }
@@ -1523,9 +1546,31 @@ function filterAdminList(query) {
 
 function quickAddStock(id) {
     switchTab('add_item');
+    const flag = document.getElementById('edit-mode-flag');
+    if (flag) flag.value = 'false';
+    const title = document.getElementById('add-item-title');
+    if (title) title.textContent = "Add / Receive Item";
+    const label = document.getElementById('add-qty-label');
+    if (label) label.textContent = "Quantity (Stock In)";
+
     document.getElementById('add-search').value = id;
     filterUnifiedDropdown(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.openEditItemMode = function(id) {
+    switchTab('add_item');
+    const flag = document.getElementById('edit-mode-flag');
+    if (flag) flag.value = 'true';
+    const title = document.getElementById('add-item-title');
+    if (title) title.textContent = "Edit Item Details";
+    const label = document.getElementById('add-qty-label');
+    if (label) label.textContent = "Current Stock Quantity (Correction)";
+    
+    document.getElementById('add-search').value = id;
+    filterUnifiedDropdown(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
     setTimeout(() => {
         const qtyField = document.getElementById('add-qty');
         if (qtyField) qtyField.focus();
@@ -1557,7 +1602,7 @@ async function confirmDiscontinue(id, name, isReactivate) {
                 showErrorModal(data.message || 'Gagal mengubah status.');
             }
         } catch (e) {
-            showErrorModal('Ralat sambungan pelayan.');
+            showErrorModal('Error sambungan pelayan.');
         } finally {
             document.getElementById('global-loader').style.display = 'none';
         }
@@ -1595,7 +1640,7 @@ window.switchTab = function(viewId) {
     if (viewId === 'admin') renderAdminList();
     if (viewId === 'approval') fetchPendingRequests();
     if (viewId === 'return') fetchActiveBorrows();
-    if (viewId === 'profile') renderProfileHistory();
+    if (viewId === 'profile') renderProfileeHistory();
 };
 
 // Override addToCart to include Due_Date
@@ -1613,7 +1658,7 @@ window.addToCart = function(event, type) {
     if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
-    if (prefix === 'out' && qty > maxStock) return showToast('Kuantiti ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
     if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
 
     const serialGroup = document.getElementById(`${prefix}-serial-group`);
@@ -1672,7 +1717,7 @@ window.handleUnifiedAdd = async function(event) {
     const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
 
     if (!itemIdInput) {
-        showToast('Sila isikan ID Barang (Item ID)', 'error');
+        showToast('Sila isikan Item ID (Item ID)', 'error');
         return;
     }
 
@@ -1682,7 +1727,7 @@ window.handleUnifiedAdd = async function(event) {
         Quantity: document.getElementById('add-qty').value,
         Remarks: toTitleCase(document.getElementById('add-remarks').value.trim()),
         Supplier: toTitleCase(document.getElementById('add-remarks').value.trim()),
-        Image_Data: document.getElementById('add-image-base64') ? document.getElementById('add-image-base64').value : "",
+        Image_Data: document.getElementById('add-image-base64') ? document.getElementById('add-image-base64').value : "[]",
         Attachment_Data: document.getElementById('add-attachment-base64') ? document.getElementById('add-attachment-base64').value : "",
         Entered_By: currentUser,
         Staff_PIN: currentUserPin
@@ -1701,30 +1746,31 @@ window.handleUnifiedAdd = async function(event) {
     const ppEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
     payload.Perlu_Pulang = ppEl ? ppEl.value : 'YA';
 
+    const isEditMode = document.getElementById('edit-mode-flag') && document.getElementById('edit-mode-flag').value === 'true';
+
     if (isNewItem && (!payload.Category || !payload.Unit)) {
-        showToast('Sila pilih Kategori dan Unit untuk barang baru.', 'error');
+        showToast('Please select Category and Unit for new item.', 'error');
         return;
-    } else {
-        if (!payload.Attachment_Data) {
-            // Optional but good to enforce DO for restock if requested
-            // showToast('Sila muat naik Invois / D.O untuk restock.', 'error');
-            // return;
-        }
+    } else if (!isEditMode && !isNewItem && !payload.Attachment_Data) {
+        // Enforce invoice for restock
+        showToast('Please upload Invoice/D.O for restocking.', 'error');
+        return;
     }
 
     document.getElementById('global-loader').style.display = 'flex';
 
     try {
+        const actionType = isEditMode ? "editItem" : "unifiedAdd";
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "unifiedAdd", payload: payload })
+            body: JSON.stringify({ action: actionType, payload: payload })
         });
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
             showToast(data.message);
             event.target.reset();
-            clearImage();
+            if(typeof clearMultiImage === 'function') clearMultiImage();
             if(typeof clearAttachment === 'function') clearAttachment();
 
             document.getElementById('add-name').readOnly = false;
@@ -1742,7 +1788,7 @@ window.handleUnifiedAdd = async function(event) {
             showErrorModal(data.message || 'Gagal menyimpan transaksi.');
         }
     } catch (e) {
-        showErrorModal('Ralat sambungan pelayan.');
+        showErrorModal('Error sambungan pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -1781,7 +1827,7 @@ window.handleAttachmentSelection = function(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        showToast('Buat masa ini, sila muat naik format Gambar (JPG/PNG) sahaja untuk D.O.', 'error');
+        showToast('Buat masa ini, sila muat naik format Image (JPG/PNG) sahaja untuk D.O.', 'error');
         clearAttachment();
         return;
     }
@@ -1829,7 +1875,7 @@ async function fetchPendingRequests(isSilent = false) {
             updateApprovalBadge();
         }
     } catch(e) {
-        if (!isSilent) showToast('Ralat memuatkan permohonan', 'error');
+        if (!isSilent) showToast('Error memuatkan permohonan', 'error');
     } finally {
         if (!isSilent) document.getElementById('global-loader').style.display = 'none';
     }
@@ -1865,7 +1911,7 @@ function renderApprovalList() {
     const actualPending = (pendingRequests || []).filter(r => r.Status === 'Pending');
 
     if (actualPending.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None permohonan menunggu kelulusan.</td></tr>';
     } else {
         tbody.innerHTML = actualPending.map(r => {
             let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
@@ -1931,7 +1977,7 @@ function renderApprovalList() {
         const sortedHistory = [...history].sort((a,b) => parseAppDate(b.Timestamp) - parseAppDate(a.Timestamp));
         const recent20 = sortedHistory.slice(0, 20);
         if (recent20.length === 0) {
-            recentTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod kelulusan terkini.</td></tr>';
+            recentTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No recent approval records.</td></tr>';
         } else {
             recentTbody.innerHTML = recent20.map(renderHistoryRow).join('');
         }
@@ -1954,7 +2000,7 @@ function renderApprovalList() {
         filteredHistory.sort((a,b) => parseAppDate(b.Timestamp) - parseAppDate(a.Timestamp));
 
         if (filteredHistory.length === 0) {
-            historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Pilih bulan dan tahun untuk tapisan.</td></tr>';
+            historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Select month and year to filter.</td></tr>';
         } else {
             historyTbody.innerHTML = filteredHistory.map(renderHistoryRow).join('');
         }
@@ -1983,7 +2029,7 @@ window.filterDropdown = function(prefix, query) {
         // Only show items user has borrowed
         matched = activeBorrows.map(b => ({
             Item_ID: b.Item_ID,
-            Item_Name: b.Item_Name + (b.Project && b.Project !== '-' ? ` [Projek: ${b.Project}]` : '') + ` (Pinjam: ${b.Borrow_Date})`,
+            Item_Name: b.Item_Name + (b.Project && b.Project !== '-' ? ` [Project: ${b.Project}]` : '') + ` (Pinjam: ${b.Borrow_Date})`,
             Current_Stock: b.Qty_Borrowed,
             Unit: 'Unit',
             Total_Quantity: b.Qty_Borrowed,
@@ -1998,7 +2044,7 @@ window.filterDropdown = function(prefix, query) {
         });
         
         if (matched.length === 0) {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada rekod peminjaman aktif untuk anda.</div>';
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">None rekod peminjaman aktif untuk anda.</div>';
             return;
         }
     } else {
@@ -2009,7 +2055,7 @@ window.filterDropdown = function(prefix, query) {
         });
         
         if (matched.length === 0) {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">Tiada item dijumpai</div>';
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">None item dijumpai</div>';
             return;
         }
     }
@@ -2225,10 +2271,10 @@ async function doActualSubmitCart(type, sigBase64) {
             await fetchTransactions();
             setTimeout(() => switchTab('dashboard'), 1500);
         } else {
-            showErrorModal(data.message || 'Ralat menyimpan permohonan.');
+            showErrorModal(data.message || 'Error menyimpan permohonan.');
         }
     } catch (error) {
-        showErrorModal('Ralat sambungan rangkaian: ' + error.message);
+        showErrorModal('Error sambungan rangkaian: ' + error.message);
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
@@ -2280,14 +2326,14 @@ async function doActualProcessRequest(payloadObj, sigBase64) {
             showErrorModal(data.message);
         }
     } catch(e) {
-        showErrorModal('Ralat pelayan.');
+        showErrorModal('Error pelayan.');
     } finally {
         document.getElementById('global-loader').style.display = 'none';
     }
 }
 
-// Override Profile Render to show PDF Download Button
-window.renderProfileHistory = async function() {
+// Override Profilee Render to show PDF Download Button
+window.renderProfileeHistory = async function() {
     document.getElementById('global-loader').style.display = 'flex';
     try {
         const res = await fetch(`${SCRIPT_URL}?action=getPendingRequests`);
@@ -2329,7 +2375,7 @@ window.renderProfileHistory = async function() {
     }
 
     if (!merged || merged.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada rekod permohonan peribadi.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None rekod permohonan peribadi.</td></tr>';
         return;
     }
 
