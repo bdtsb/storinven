@@ -278,7 +278,7 @@ async function fetchTransactions() {
         }
     } catch (error) {
         console.error(error);
-        showToast('Error Transaksi: ' + error.message, 'error');
+        showToast('Transaction Error: ' + error.message, 'error');
     }
 }
 
@@ -317,7 +317,7 @@ function updateDashboard() {
         if (statLow) statLow.textContent = lowStockCount;
 
         if (lowStockCount === 0) {
-            lowStockTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Semua stok dalam keadaan baik!</td></tr>';
+            lowStockTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">All stock is in good condition!</td></tr>';
         }
     } catch (err) {
         console.error("Dashboard Render Error:", err);
@@ -365,7 +365,7 @@ function renderRecentTransactions(transactions) {
     } catch (err) {
         console.error("Recent Trans Render Error:", err);
         const tbody = document.querySelector('#recent-trans-table tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Error memuatkan data. Sila *refresh*.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Error loading data. Please *refresh*.</td></tr>`;
     }
 }
 
@@ -417,7 +417,7 @@ function renderProfileeHistory(sortedTransactions) {
     } catch (err) {
         console.error("Profilee Trans Render Error:", err);
         const tbody = document.querySelector('#profile-trans-table tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Error memuatkan profil. Sila *refresh*.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Error loading profile. Please *refresh*.</td></tr>`;
     }
 }
 
@@ -462,13 +462,13 @@ function showDropdown(prefix) {
     filterDropdown(prefix, document.getElementById(`${prefix}-search`).value);
 }
 
-function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "", perluPulang = "YA", borrowId = "") {
+function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", availSerials = "", borSerials = "", imageUrl = "", perluPulang = "YES", borrowId = "") {
     document.getElementById(`${prefix}-search`).value = `${id} - ${name}`;
     document.getElementById(`${prefix}-item-id`).value = id;
     document.getElementById(`${prefix}-item-name`).value = name;
 
     const stockEl = document.getElementById(`${prefix}-current-stock`);
-    stockEl.innerHTML = `Stok Terkini: <strong style="color:var(--primary-color)">${stock} ${unit}</strong>`;
+    stockEl.innerHTML = `Current Stock: <strong style="color:var(--primary-color)">${stock} ${unit}</strong>`;
     
     if (prefix === 'ret' && document.getElementById('ret-borrow-id')) {
         document.getElementById('ret-borrow-id').value = borrowId;
@@ -479,7 +479,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     const qtyInput = document.getElementById(`${prefix}-qty`);
 
     // Serial Number Population Logic
-    if (hasSerial === "YA") {
+    if (hasSerial === "YES") {
         if (serialGroup) serialGroup.style.display = "block";
         qtyInput.value = 1;
         qtyInput.readOnly = true; // Lock quantity to 1 for serial items
@@ -505,7 +505,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         const dueDateGroup = document.getElementById('out-due-date-group');
         const dueDateInput = document.getElementById('out-due-date');
         if (dueDateGroup && dueDateInput) {
-            if (String(perluPulang).trim().toUpperCase() === 'YA') {
+            if (String(perluPulang).trim().toUpperCase() === 'YES') {
                 dueDateGroup.style.display = 'block';
                 dueDateInput.required = true;
             } else {
@@ -519,12 +519,12 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
     // Set max quantity for stock out
     if (prefix === 'out') {
         qtyInput.max = stock;
-        qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${stock}`;
+        qtyInput.placeholder = hasSerial === "YES" ? "1 Unit (Locked)" : `Max: ${stock}`;
     } else if (prefix === 'ret') {
         const maxReturn = parseInt(stock);
         qtyInput.max = maxReturn;
-        qtyInput.placeholder = hasSerial === "YA" ? "1 Unit (Berkunci)" : `Max: ${maxReturn}`;
-        stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
+        qtyInput.placeholder = hasSerial === "YES" ? "1 Unit (Locked)" : `Max: ${maxReturn}`;
+        stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maximum return: ${maxReturn} ${unit}</small>`;
     }
 
     const container = document.getElementById(`${prefix}-item-image-container`);
@@ -551,7 +551,7 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
                 html += `</div>`;
                 
                 if (urls.length > 1) {
-                    html += `<div style="text-align:center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">&#8592; Tatal untuk melihat ${urls.length} gambar &#8594;</div>`;
+                    html += `<div style="text-align:center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">&#8592; Scroll to view ${urls.length} images &#8594;</div>`;
                 }
                 container.innerHTML = html;
                 container.style.display = "block";
@@ -596,7 +596,7 @@ function showUnifiedDropdown() {
     filterUnifiedDropdown(document.getElementById(`add-search`).value);
 }
 
-function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulang, punyaSerial = "TIDAK", serialTersedia = "") {
+function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulang, punyaSerial = "NO", serialTersedia = "") {
     document.getElementById('add-search').value = id; // Just show ID in search bar
     document.getElementById('add-dropdown').classList.remove('active');
 
@@ -611,7 +611,7 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulan
     document.getElementById('add-unit').value = unit || "";
     document.getElementById('add-min').value = minStock || "0";
     
-    if (String(perluPulang).trim().toUpperCase() === "YA") {
+    if (String(perluPulang).trim().toUpperCase() === "YES") {
         document.getElementById('add-perlu-pulang-ya').checked = true;
     } else {
         document.getElementById('add-perlu-pulang-tidak').checked = true;
@@ -621,7 +621,7 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulan
     const hasSerialCheckbox = document.getElementById('add-has-serial');
     const serialContainer = document.getElementById('serial-input-container');
     const serialInput = document.getElementById('add-serials');
-    if (String(punyaSerial).trim().toUpperCase() === "YA") {
+    if (String(punyaSerial).trim().toUpperCase() === "YES") {
         hasSerialCheckbox.checked = true;
         serialContainer.style.display = 'block';
         serialInput.value = (serialTersedia || "").replace(/&quot;/g, '"');
@@ -636,7 +636,7 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulan
     if(document.getElementById('new-item-threshold')) document.getElementById('new-item-threshold').style.display = 'block';
 
     // Update status UI
-    document.getElementById('add-status').innerHTML = `Item Sedia Ada (Current Stock: ${stock || 0} ${unit})`;
+    document.getElementById('add-status').innerHTML = `Existing Item (Current Stock: ${stock || 0} ${unit})`;
     document.getElementById('add-status').style.color = 'var(--text-secondary)';
 }
 
@@ -660,7 +660,7 @@ function filterUnifiedDropdown(query) {
         document.getElementById('add-unit').value = exactMatch.Unit || "";
         document.getElementById('add-min').value = exactMatch.Min_Stock || "0";
         
-        if (String(exactMatch.Perlu_Pulang).trim().toUpperCase() === "YA") {
+        if (String(exactMatch.Perlu_Pulang).trim().toUpperCase() === "YES") {
             document.getElementById('add-perlu-pulang-ya').checked = true;
         } else {
             document.getElementById('add-perlu-pulang-tidak').checked = true;
@@ -670,7 +670,7 @@ function filterUnifiedDropdown(query) {
         const hasSerialCheckbox = document.getElementById('add-has-serial');
         const serialContainer = document.getElementById('serial-input-container');
         const serialInput = document.getElementById('add-serials');
-        if (String(exactMatch.Punya_Serial).trim().toUpperCase() === "YA") {
+        if (String(exactMatch.Punya_Serial).trim().toUpperCase() === "YES") {
             hasSerialCheckbox.checked = true;
             serialContainer.style.display = 'block';
             serialInput.value = exactMatch.Serial_Tersedia || "";
@@ -757,15 +757,15 @@ function filterUnifiedDropdown(query) {
 
         const thumbHtml = getThumbHtml(item.Image_URL || "", 40);
 
-        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
+        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YES" ? "YES" : "NO";
         const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         return `
-        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "TIDAK"}', '${hasSerial}', '${availSerials}')" style="display:flex; align-items:center; gap:0.6rem;">
+        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "NO"}', '${hasSerial}', '${availSerials}')" style="display:flex; align-items:center; gap:0.6rem;">
             ${thumbHtml}
             <div>
                 <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
-                <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
+                <small style="color:var(--text-secondary)">Stock: ${item.Current_Stock || 0} ${item.Unit}</small>
             </div>
         </div>
         `;
@@ -800,9 +800,9 @@ function filterSupplierDropdown(query) {
     if (filtered.length === 0) {
         if (q.length > 0) {
             const displayTitle = toTitleCase(query.trim());
-            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer; background:white;" onclick="selectSupplier('${displayTitle.replace(/'/g, "\\'")}')">✨ Tekan di sini untuk tetapkan '${displayTitle}' sebagai pembekal baharu.</div>`;
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer; background:white;" onclick="selectSupplier('${displayTitle.replace(/'/g, "\\'")}')">✨ Click here to set '${displayTitle}' as a new supplier.</div>`;
         } else {
-            html += `<div class="combo-item" style="color: var(--text-secondary); cursor:default; background:white;">Senarai pembekal kosong.</div>`;
+            html += `<div class="combo-item" style="color: var(--text-secondary); cursor:default; background:white;">Supplier list is empty.</div>`;
         }
     } else {
         html += filtered.map(sup => `
@@ -833,7 +833,7 @@ function addToCart(event, type) {
     if (!itemId) return showToast('Please search and select an item first!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
-    if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'out' && qty > maxStock) return showToast('Quantity taken exceeds available stock!', 'error');
     if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
 
     const serialGroup = document.getElementById(`${prefix}-serial-group`);
@@ -842,7 +842,7 @@ function addToCart(event, type) {
 
     if (serialGroup && serialGroup.style.display === "block") {
         selectedSerial = serialSelect.value;
-        if (!selectedSerial) return showToast('Sila pilih Nombor Siri barangan ini!', 'warning');
+        if (!selectedSerial) return showToast('Please select a Serial Number for this item!', 'warning');
     }
 
     const cartItem = {
@@ -1001,7 +1001,7 @@ async function submitLogin() {
     const selectedUser = document.getElementById('login-user').value;
     const pin = document.getElementById('login-pin').value;
 
-    if (!selectedUser) return showToast('Sila pilih nama pengguna.', 'error');
+    if (!selectedUser) return showToast('Please select a username.', 'error');
     if (pin.length !== 4) return showToast('PIN mestilah 4 angka.', 'error');
 
     document.getElementById('global-loader').style.display = 'flex';
@@ -1059,7 +1059,7 @@ async function submitLogin() {
 
             showToast(`Selamat datang, ${currentUser}!`, 'success');
         } else {
-            showToast(data.message || 'PIN Keselamatan Salah.', 'error');
+            showToast(data.message || 'Invalid Security PIN.', 'error');
             document.getElementById('login-pin').value = '';
             document.getElementById('login-pin').focus();
         }
@@ -1176,7 +1176,7 @@ async function executeToggleItemStatus() {
             await fetchItems(); // Refresh items to update the UI
             renderAdminList(); // Re-render admin list
         } else {
-            showErrorModal(data.message || 'Gagal mengemaskini status item.');
+            showErrorModal(data.message || 'Failed mengemaskini status item.');
         }
     } catch (e) {
         showErrorModal('Error sambungan pelayan.');
@@ -1198,7 +1198,7 @@ function handleImageSelection(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        showToast('Sila pilih fail gambar sahaja.', 'error');
+        showToast('Please select image files only.', 'error');
         clearImage();
         return;
     }
@@ -1250,7 +1250,7 @@ function toTitleCase(str) {
     return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-// Handler for Unified Item Registration / Stok In
+// Handler for Unified Item Registration / Stock In
 async function handleUnifiedAdd(event) {
     event.preventDefault();
 
@@ -1286,7 +1286,7 @@ async function handleUnifiedAdd(event) {
         payload.Min_Stock = document.getElementById('add-min').value;
         // Get Perlu_Pulang from radio buttons
         const perluPulangEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
-        payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'TIDAK';
+        payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'NO';
 
         if (!payload.Category || !payload.Unit) {
             showToast('Please select Category and Unit for new item.', 'error');
@@ -1325,7 +1325,7 @@ async function handleUnifiedAdd(event) {
                 switchTab('dashboard');
             }, 1500);
         } else {
-            showErrorModal(data.message || 'Gagal menyimpan transaksi.');
+            showErrorModal(data.message || 'Failed menyimpan transaksi.');
         }
     } catch (e) {
         showErrorModal('Error sambungan pelayan.');
@@ -1657,7 +1657,7 @@ async function confirmDiscontinue(id, name, isReactivate) {
                 showToast(data.message);
                 await fetchItems();
             } else {
-                showErrorModal(data.message || 'Gagal mengubah status.');
+                showErrorModal(data.message || 'Failed mengubah status.');
             }
         } catch (e) {
             showErrorModal('Error sambungan pelayan.');
@@ -1716,7 +1716,7 @@ window.addToCart = function(event, type) {
     if (!itemId) return showToast('Please search and select an item first!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
-    if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
+    if (prefix === 'out' && qty > maxStock) return showToast('Quantity taken exceeds available stock!', 'error');
     if (prefix === 'ret' && qty > maxStock) return showToast(`Maksimum pemulangan adalah ${maxStock} unit.`, 'error');
 
     const serialGroup = document.getElementById(`${prefix}-serial-group`);
@@ -1725,7 +1725,7 @@ window.addToCart = function(event, type) {
 
     if (serialGroup && serialGroup.style.display === "block") {
         selectedSerial = serialSelect.value;
-        if (!selectedSerial) return showToast('Sila pilih Nombor Siri barangan ini!', 'warning');
+        if (!selectedSerial) return showToast('Please select a Serial Number for this item!', 'warning');
     }
 
     const cartItem = {
@@ -1802,7 +1802,7 @@ window.handleUnifiedAdd = async function(event) {
     payload.Unit = document.getElementById('add-unit').value;
     payload.Min_Stock = document.getElementById('add-min').value;
     const ppEl = document.querySelector('input[name="add-perlu-pulang"]:checked');
-    payload.Perlu_Pulang = ppEl ? ppEl.value : 'YA';
+    payload.Perlu_Pulang = ppEl ? ppEl.value : 'YES';
 
     const isEditMode = document.getElementById('edit-mode-flag') && document.getElementById('edit-mode-flag').value === 'true';
 
@@ -1843,7 +1843,7 @@ window.handleUnifiedAdd = async function(event) {
 
             setTimeout(() => { switchTab('dashboard'); }, 1500);
         } else {
-            showErrorModal(data.message || 'Gagal menyimpan transaksi.');
+            showErrorModal(data.message || 'Failed menyimpan transaksi.');
         }
     } catch (e) {
         showErrorModal('Error sambungan pelayan.');
@@ -1885,7 +1885,7 @@ window.handleAttachmentSelection = function(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        showToast('Buat masa ini, sila muat naik format Image (JPG/PNG) sahaja untuk D.O.', 'error');
+        showToast('Currently, please upload Image format (JPG/PNG) only for D.O.', 'error');
         clearAttachment();
         return;
     }
@@ -2091,12 +2091,12 @@ window.filterDropdown = function(prefix, query) {
             Current_Stock: b.Qty_Borrowed,
             Unit: 'Unit',
             Total_Quantity: b.Qty_Borrowed,
-            Punya_Serial: b.Selected_Serial ? "YA" : "TIDAK",
+            Punya_Serial: b.Selected_Serial ? "YES" : "NO",
             Serial_Tersedia: "",
             Serial_Dipinjam: b.Selected_Serial || "",
             Image_URL: "",
             Borrow_ID: b.Borrow_ID,
-            Perlu_Pulang: "YA"
+            Perlu_Pulang: "YES"
         })).filter(item => {
             return String(item.Item_ID).toLowerCase().includes(q) || String(item.Item_Name).toLowerCase().includes(q);
         });
@@ -2121,15 +2121,15 @@ window.filterDropdown = function(prefix, query) {
     const displayLimit = 50;
     let html = matched.slice(0, displayLimit).map(item => {
         const safeName = (item.Item_Name || "").replace(/'/g, "\\'");
-        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
+        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YES" ? "YES" : "NO";
         const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const borSerials = (item.Serial_Dipinjam || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const perluPulang = (item.Perlu_Pulang || "TIDAK").trim().toUpperCase();
+        const perluPulang = (item.Perlu_Pulang || "NO").trim().toUpperCase();
         
         const thumbHtml = getThumbHtml(item.Image_URL || "", 40);
 
-        let stockLabel = prefix === 'ret' ? "Hutang Pinjaman" : "Stok";
+        let stockLabel = prefix === 'ret' ? "Loan Debt" : "Stok";
 
         return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}', '${item.Borrow_ID || ''}')" style="display:flex; align-items:center; gap:0.6rem;">
             ${thumbHtml}
@@ -2516,7 +2516,7 @@ window.handleMultiImageSelection = function(event) {
     
     files.forEach(file => {
         if (!file.type.startsWith('image/')) {
-            showToast('Sila pilih fail gambar sahaja.', 'error');
+            showToast('Please select image files only.', 'error');
             processedCount++;
             checkCompletion();
             return;

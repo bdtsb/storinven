@@ -33,13 +33,13 @@
         <div class="modal-content" style="box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
             <div style="text-align: center; margin-bottom: 2rem;">
                 <img src="./static/img/logo.png" alt="Logo" style="max-height: 60px; margin-bottom: 10px;">
-                <h2 class="modal-title" style="color: var(--primary-color); font-size: 1.5rem; margin-bottom: 0;">Inventory Management System <small style="font-size: 0.7rem; color: var(--text-secondary); font-weight: normal;">v2.0</small></h2>
-                <p style="color: var(--text-secondary); margin-top: 5px;">Please login to continue.</p>
+                <h2 class="modal-title" style="color: var(--primary-color); font-size: 1.5rem; margin-bottom: 0;">Inventory Management System</h2>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Selamat datang!</p>
             </div>
 
             <div class="form-group">
                 <select id="login-user" style="margin-bottom: 10px;" onchange="handleLoginUserSelect()">
-                    <option value="" disabled selected>Loading list...</option>
+                    <option value="" disabled selected>Senarai nama...</option>
                 </select>
             </div>
             <div class="form-group" id="login-pin-group" style="display:none;">
@@ -88,7 +88,7 @@
             <div class="user-info"
                 style="margin-top: 0; font-weight: 500; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;">
                 <div>
-                    Inventory Management System <a href="updatelog.html" style="font-size: 0.75rem; color: var(--text-secondary); text-decoration: none; margin-left: 5px;">v2.0</a> <span id="header-dash" style="display:none">-</span> <span
+                    Inventory Management System <span id="header-dash" style="display:none">-</span> <span
                         id="header-user-name" style="font-weight: 700; color: var(--primary-color);"></span>
                     <span id="admin-indicator" style="display:none;" title="Ada permohonan menunggu kelulusan" onclick="switchTab('profile'); if(isAdmin) showProfileeSection('approval');">
                         <span class="indicator-dot"></span>
@@ -429,7 +429,7 @@
                     <option value="Type">Type</option>
                     <option value="Item">Item</option>
                     <option value="Quantity">Quantity</option>
-                    <option value="Project">Project / Catatan</option>
+                    <option value="Project">Project / Remarks</option>
                 </select>
             </div>
             <div class="table-responsive" style="max-height: 400px; border: 1px solid var(--border-color);">
@@ -441,7 +441,7 @@
                             <th>Type</th>
                             <th>Item</th>
                             <th>Quantity</th>
-                            <th>Project/Catatan</th>
+                            <th>Project/Remarks</th>
                               <th>Status</th>
                               <th>Receipt</th>
                         </tr>
@@ -661,7 +661,7 @@
                             <input type="checkbox" id="add-has-serial"
                                 onchange="document.getElementById('serial-input-container').style.display = this.checked ? 'block' : 'none';"
                                 style="width: 20px; height: 20px;">
-                            <span style="font-weight: bold; color: #d35400;">Bekalan Aset / Tools Bernombor
+                            <span style="font-weight: bold; color: #d35400;">Serialized Assets / Tools
                                 Siri?</span>
                         </label>
                         <div id="serial-input-container" style="display: none; margin-top: 10px;">
@@ -689,11 +689,11 @@
                         <label>Return Required?</label>
                         <div style="display: flex; gap: 1.5rem; margin-top: 0.3rem;">
                             <label style="display:flex; align-items:center; gap:0.4rem; font-weight:400; cursor:pointer;">
-                                <input type="radio" id="add-perlu-pulang-ya" name="add-perlu-pulang" value="YA" checked>
+                                <input type="radio" id="add-perlu-pulang-ya" name="add-perlu-pulang" value="YES" checked>
                                 ✅ Yes (Loan item - return required)
                             </label>
                             <label style="display:flex; align-items:center; gap:0.4rem; font-weight:400; cursor:pointer;">
-                                <input type="radio" id="add-perlu-pulang-tidak" name="add-perlu-pulang" value="TIDAK">
+                                <input type="radio" id="add-perlu-pulang-tidak" name="add-perlu-pulang" value="NO">
                                 ❌ No (Consumable item)
                             </label>
                         </div>
@@ -751,7 +751,7 @@
                     <button type="button" class="btn-cancel" onclick="switchTab('admin')"
                         style="flex: 1; max-width: 250px; padding: 12px; font-size: 1rem; background-color: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
                     <button type="submit" class="btn-submit"
-                        style="flex: 1; max-width: 250px; padding: 12px; font-size: 1rem; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0;">Sahkan Simpan Stok</button>
+                        style="flex: 1; max-width: 250px; padding: 12px; font-size: 1rem; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0;">Confirm Save Stock</button>
                 </div>
             </form>
         </div>
@@ -763,21 +763,21 @@
     <div class="modal-overlay" id="staff-set-pin-modal">
         <div class="modal-content">
             <h3 class="modal-title">Create First Time PIN</h3>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Sila tetapkan 4-digit PIN keselamatan untuk
-                nama anda.</p>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Please set a 4-digit security PIN for
+                your name.</p>
             <div class="form-group">
                 <input type="password" id="staff-new-pin" maxlength="4" placeholder="****"
                     style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
             </div>
             <div class="form-group">
-                <label>Sahkan PIN Baru</label>
+                <label>Confirm New PIN</label>
                 <input type="password" id="staff-confirm-pin" maxlength="4" placeholder="****"
                     style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
                     onkeypress="if(event.key === 'Enter') submitSetStaffPin()">
             </div>
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeStaffModal('set')">Cancel</button>
-                <button class="btn-submit" style="margin-top: 0;" onclick="submitSetStaffPin()">Simpan PIN</button>
+                <button class="btn-submit" style="margin-top: 0;" onclick="submitSetStaffPin()">Save PIN</button>
             </div>
         </div>
     </div>
@@ -793,12 +793,12 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
-            <h3 class="modal-title" style="color: var(--primary-color);">Pengesahan Action</h3>
+            <h3 class="modal-title" style="color: var(--primary-color);">Action Confirmation</h3>
             <p id="confirm-action-msg" style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.5;">
             </p>
             <div class="modal-actions" style="justify-content: center; gap: 10px;">
                 <button class="btn-cancel" onclick="closeConfirmModal()" style="flex: 1;">Cancel</button>
-                <button class="btn-submit" id="btn-confirm-action" style="flex: 1; margin: 0;">Sahkan</button>
+                <button class="btn-submit" id="btn-confirm-action" style="flex: 1; margin: 0;">Confirm</button>
             </div>
         </div>
     </div>
@@ -812,10 +812,10 @@
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
             </div>
-            <h3 class="modal-title" style="color: var(--danger-color);">Error Transaksi</h3>
+            <h3 class="modal-title" style="color: var(--danger-color);">Transaction Error</h3>
             <p id="error-alert-msg" style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.5;"></p>
             <div class="modal-actions" style="justify-content: center;">
-                <button class="btn-cancel" onclick="closeErrorModal()" style="width: 100%;">Close Mesej (Close)</button>
+                <button class="btn-cancel" onclick="closeErrorModal()" style="width: 100%;">Close Message</button>
             </div>
         </div>
     </div>
