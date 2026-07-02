@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Auto logout after remaining time
             const remainingTime = (1 * 60 * 60 * 1000) - (Date.now() - parseInt(savedTime));
             sessionTimer = setTimeout(() => {
-                showToast('Sesi tamat. Sila log masuk semula.', 'error');
+                showToast('Session expired. Please login again.', 'error');
                 logout();
             }, remainingTime);
 
@@ -328,22 +328,22 @@ function renderRecentTransactions(transactions) {
         if (!tbody) return;
 
         if (!transactions || transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod transaksi.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No transaction records.</td></tr>';
             return;
         }
 
         tbody.innerHTML = transactions.map(t => {
             if (!t) return '';
             let badgeClass = 'badge-tambah';
-            let typeDisplay = 'TAMBAH';
-            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            let typeDisplay = 'ADD';
+            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
             // Fallbacks for old sheet data
-            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-            if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
 
             // Find image from masterItems
             const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
@@ -374,18 +374,18 @@ function renderProfileeHistory(sortedTransactions) {
 
         // Update Profilee Stat display safely
         const nameDisplay = document.getElementById('profile-name-display');
-        if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
+        if (nameDisplay) nameDisplay.innerText = currentUser || "Unknown User";
 
         // Filter personal transactions if not provided
         const personalTrans = sortedTransactions || (allTransactions ? allTransactions.filter(t => t && t.Entered_By === currentUser) : []);
 
         const statsDisplay = document.getElementById('profile-stats-display');
         if (statsDisplay && allTransactions) {
-            statsDisplay.innerText = `Anda merekodkan ${allTransactions.filter(t => t && t.Entered_By === currentUser).length} unit transaksi setakat ini.`;
+            statsDisplay.innerText = `You recorded ${allTransactions.filter(t => t && t.Entered_By === currentUser).length} transaction units so far.`;
         }
 
         if (!personalTrans || personalTrans.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">None rekod transaksi peribadi.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No personal transaction records.</td></tr>';
             return;
         }
 
@@ -393,15 +393,15 @@ function renderProfileeHistory(sortedTransactions) {
         tbody.innerHTML = personalTrans.map(t => {
             if (!t) return '';
             let badgeClass = 'badge-tambah';
-            let typeDisplay = 'TAMBAH';
-            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            let typeDisplay = 'ADD';
+            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
             // Fallbacks for old sheet data
-            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-            if (t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
 
             return `
             <tr>
@@ -679,7 +679,7 @@ function filterUnifiedDropdown(query) {
 
     if (filtered.length === 0) {
         if (q.length > 0) {
-            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Mendaftar ID Baru: ${q.toUpperCase()}</div>`;
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Registering New ID: ${q.toUpperCase()}</div>`;
         }
         dropdown.innerHTML = html;
         return;
@@ -768,14 +768,14 @@ function selectSupplier(name) {
 // --- BATCH CART LOGIC ---
 function addToCart(event, type) {
     event.preventDefault();
-    let prefix = type === 'AMBIL' ? 'out' : 'ret';
+    let prefix = type === 'REQUEST' ? 'out' : 'ret';
 
     const itemId = document.getElementById(`${prefix}-item-id`).value;
     const itemName = document.getElementById(`${prefix}-item-name`).value;
     const qty = parseInt(document.getElementById(`${prefix}-qty`).value);
     const project = prefix === 'out' ? document.getElementById('out-project').value : '-';
 
-    if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
+    if (!itemId) return showToast('Please search and select an item first!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
     if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
@@ -801,12 +801,12 @@ function addToCart(event, type) {
         Remarks: ""
     };
 
-    if (type === 'AMBIL') {
+    if (type === 'REQUEST') {
         if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
             return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
         }
         outCart.push(cartItem);
-        renderCart('AMBIL');
+        renderCart('REQUEST');
         document.getElementById('out-search').value = "";
         document.getElementById('out-item-id').value = "";
         document.getElementById('out-qty').value = "";
@@ -818,7 +818,7 @@ function addToCart(event, type) {
             return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
         }
         retCart.push(cartItem);
-        renderCart('PULANG');
+        renderCart('RETURN');
         document.getElementById('ret-search').value = "";
         document.getElementById('ret-item-id').value = "";
         document.getElementById('ret-qty').value = "";
@@ -828,10 +828,10 @@ function addToCart(event, type) {
 }
 
 function renderCart(type) {
-    let prefix = type === 'AMBIL' ? 'out' : 'ret';
+    let prefix = type === 'REQUEST' ? 'out' : 'ret';
     const container = document.getElementById(`${prefix}-cart-container`);
     const tbody = document.getElementById(`${prefix}-cart-tbody`);
-    const cart = type === 'AMBIL' ? outCart : retCart;
+    const cart = type === 'REQUEST' ? outCart : retCart;
 
     if (cart.length === 0) {
         if (container) container.style.display = "none";
@@ -850,23 +850,23 @@ function renderCart(type) {
 }
 
 function removeFromCart(type, index) {
-    if (type === 'AMBIL') {
+    if (type === 'REQUEST') {
         outCart.splice(index, 1);
-        renderCart('AMBIL');
+        renderCart('REQUEST');
     } else {
         retCart.splice(index, 1);
-        renderCart('PULANG');
+        renderCart('RETURN');
     }
 }
 
 async function submitCart(type) {
-    let cart = type === 'AMBIL' ? outCart : retCart;
+    let cart = type === 'REQUEST' ? outCart : retCart;
     if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
 
     const staffName = document.getElementById('login-user').value || currentUser;
     const staffPin = document.getElementById('login-pin').value || currentUserPin;
 
-    if (!staffName) return showToast('Sila log masuk dahulu!', 'error');
+    if (!staffName) return showToast('Please login first!', 'error');
 
     document.getElementById('global-loader').style.display = 'flex';
 
@@ -890,13 +890,13 @@ async function submitCart(type) {
             if (data.pdf_url) {
                 window.open(data.pdf_url, '_blank');
             }
-            if (type === 'AMBIL') {
+            if (type === 'REQUEST') {
                 outCart = [];
-                renderCart('AMBIL');
+                renderCart('REQUEST');
                 document.getElementById('out-project').value = ""; // Also clear project on success
             } else {
                 retCart = [];
-                renderCart('PULANG');
+                renderCart('RETURN');
             }
             await fetchItems();
             await fetchTransactions();
@@ -991,7 +991,7 @@ async function submitLogin() {
             // Set 1-hour auto logout timer
             if (sessionTimer) clearTimeout(sessionTimer);
             sessionTimer = setTimeout(() => {
-                showToast('Sesi tamat. Sila log masuk semula.', 'error');
+                showToast('Session expired. Please login again.', 'error');
                 logout();
             }, 60 * 60 * 1000);
 
@@ -1049,7 +1049,7 @@ async function submitSetStaffPin() {
             const staffObj = staffList.find(s => s.Staff_Name === pendingTransactionPayload.Entered_By);
             if (staffObj) staffObj.Has_PIN = true; // Set local flag
 
-            showToast('Selesai! PIN anda telah disimpan.', 'success');
+            showToast('Completed! PIN anda telah disimpan.', 'success');
             document.getElementById('staff-set-pin-modal').style.display = 'none';
 
             if (pendingTransactionPayload.is_login_auth) {
@@ -1203,7 +1203,7 @@ async function handleUnifiedAdd(event) {
     const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
 
     if (!itemIdInput) {
-        showToast('Sila isikan Item ID (Item ID)', 'error');
+        showToast('Please fill in Item ID', 'error');
         return;
     }
 
@@ -1234,7 +1234,7 @@ async function handleUnifiedAdd(event) {
         payload.Perlu_Pulang = perluPulangEl ? perluPulangEl.value : 'TIDAK';
 
         if (!payload.Category || !payload.Unit) {
-            showToast('Sila pilih Category dan Unit untuk barang baru.', 'error');
+            showToast('Please select Category and Unit for new item.', 'error');
             return;
         }
     }
@@ -1417,7 +1417,7 @@ function filterAllTransactions() {
     if (!tbody) return;
 
     if (!allTransactions || allTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod transaksi.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No transaction records.</td></tr>';
         return;
     }
 
@@ -1435,17 +1435,17 @@ function filterAllTransactions() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None rekod transaksi dijumpai untuk bulan dan tahun yang dipilih.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No transaction records found for the selected month and year.</td></tr>';
         return;
     }
 
     tbody.innerHTML = filtered.map(t => {
         let badgeClass = 'badge-tambah';
-        let typeDisplay = 'TAMBAH';
-        if (t.Type === 'AMBIL' || t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'AMBIL'; }
-        if (t.Type === 'PULANG' || t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'PULANG'; }
-        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'DAFTAR'; }
-        if (t.Type === 'TAMBAH' || t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'TAMBAH'; }
+        let typeDisplay = 'ADD';
+        if (t.Type === 'AMBIL' || t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+        if (t.Type === 'PULANG' || t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+        if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+        if (t.Type === 'TAMBAH' || t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
 
         // Find image from masterItems
         const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
@@ -1482,7 +1482,7 @@ function filterAdminList(query) {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">None rekod dijumpai.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No records found.</td></tr>';
         return;
     }
 
@@ -1495,14 +1495,14 @@ function filterAdminList(query) {
     });
 
     const html = filtered.map(item => {
-        const totalMasuk = parseInt(item.Total_Quantity || 0, 10);
-        const bakiSemasa = parseInt(item.Current_Stock || 0, 10);
-        const totalKeluar = totalMasuk - bakiSemasa;
+        const totalIn = parseInt(item.Total_Quantity || 0, 10);
+        const currentBalance = parseInt(item.Current_Stock || 0, 10);
+        const totalOut = totalIn - currentBalance;
         
         let statusBadge = '';
         if (item.Status === 'Discontinued') {
             statusBadge = '<span class="badge badge-danger">Discontinued</span>';
-        } else if (bakiSemasa <= parseInt(item.Min_Stock || 0, 10)) {
+        } else if (currentBalance <= parseInt(item.Min_Stock || 0, 10)) {
             statusBadge = '<span class="badge" style="background:#fdedec; color:#e74c3c;">Low Stock</span>';
         } else {
             statusBadge = '<span class="badge" style="background:#eafaf1; color:#27ae60;">Active</span>';
@@ -1531,10 +1531,10 @@ function filterAdminList(query) {
             <tr>
                 <td style="text-align:center; padding:0.4rem;">${thumbHtml}</td>
                 <td><strong>${item.Item_ID}</strong></td>
-                <td>${item.Item_Name} <br><small style="color:var(--text-secondary)">Pembekal: ${item.Supplier || '-'}</small></td>
-                <td style="color: var(--primary-color); font-weight: bold;">${totalMasuk}</td>
-                <td style="color: var(--danger-color); font-weight: bold;">${totalKeluar}</td>
-                <td style="color: var(--success-color); font-weight: bold;">${bakiSemasa}</td>
+                <td>${item.Item_Name} <br><small style="color:var(--text-secondary)">Supplier: ${item.Supplier || '-'}</small></td>
+                <td style="color: var(--primary-color); font-weight: bold;">${totalIn}</td>
+                <td style="color: var(--danger-color); font-weight: bold;">${totalOut}</td>
+                <td style="color: var(--success-color); font-weight: bold;">${currentBalance}</td>
                 <td>${statusBadge}</td>
                 <td style="min-width: 120px;">${actionButtons}</td>
             </tr>
@@ -1581,10 +1581,10 @@ window.openEditItemMode = function(id) {
 }
 
 async function confirmDiscontinue(id, name, isReactivate) {
-    const actionWord = isReactivate ? "MENGAKTIFKAN SEMULA" : "MENAMATKAN (DISCONTINUE)";
+    const actionWord = isReactivate ? "REACTIVATING" : "DISCONTINUING";
     const newStatus = isReactivate ? "Active" : "Discontinued";
     
-    if (confirm(`Adakah anda pasti untuk ${actionWord} barang ini?\n\n[${id}] - ${name}`)) {
+    if (confirm(`Are you sure to ${actionWord} this item?\n\n[${id}] - ${name}`)) {
         document.getElementById('global-loader').style.display = 'flex';
         try {
             const response = await fetch(SCRIPT_URL, {
@@ -1649,7 +1649,7 @@ window.switchTab = function(viewId) {
 // Override addToCart to include Due_Date
 window.addToCart = function(event, type) {
     event.preventDefault();
-    let prefix = type === 'AMBIL' ? 'out' : 'ret';
+    let prefix = type === 'REQUEST' ? 'out' : 'ret';
 
     const itemId = document.getElementById(`${prefix}-item-id`).value;
     const itemName = document.getElementById(`${prefix}-item-name`).value;
@@ -1658,7 +1658,7 @@ window.addToCart = function(event, type) {
     const dueDate = prefix === 'out' && document.getElementById('out-due-date') ? document.getElementById('out-due-date').value : '';
     const borrowId = prefix === 'ret' && document.getElementById('ret-borrow-id') ? document.getElementById('ret-borrow-id').value : '';
 
-    if (!itemId) return showToast('Sila carian dan pilih item terlebih dahulu!', 'warning');
+    if (!itemId) return showToast('Please search and select an item first!', 'warning');
 
     const maxStock = parseInt(document.getElementById(`${prefix}-qty`).max || 0);
     if (prefix === 'out' && qty > maxStock) return showToast('Quantity ambil melebihi stok sedia ada!', 'error');
@@ -1685,12 +1685,12 @@ window.addToCart = function(event, type) {
         Remarks: ""
     };
 
-    if (type === 'AMBIL') {
+    if (type === 'REQUEST') {
         if (outCart.find(c => c.Item_ID === itemId && (!selectedSerial || c.Selected_Serial === selectedSerial))) {
             return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
         }
         outCart.push(cartItem);
-        renderCart('AMBIL');
+        renderCart('REQUEST');
         document.getElementById('out-search').value = "";
         document.getElementById('out-item-id').value = "";
         document.getElementById('out-qty').value = "";
@@ -1703,7 +1703,7 @@ window.addToCart = function(event, type) {
             return showToast('Item/Serial ini sudah ada di dalam bakul!', 'warning');
         }
         retCart.push(cartItem);
-        renderCart('PULANG');
+        renderCart('RETURN');
         document.getElementById('ret-search').value = "";
         document.getElementById('ret-item-id').value = "";
         document.getElementById('ret-qty').value = "";
@@ -1720,7 +1720,7 @@ window.handleUnifiedAdd = async function(event) {
     const itemIdInput = isNewItem ? document.getElementById('add-search').value.trim().toUpperCase() : document.getElementById('add-item-id').value;
 
     if (!itemIdInput) {
-        showToast('Sila isikan Item ID (Item ID)', 'error');
+        showToast('Please fill in Item ID', 'error');
         return;
     }
 
@@ -1917,7 +1917,7 @@ function renderApprovalList() {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None permohonan menunggu kelulusan.</td></tr>';
     } else {
         tbody.innerHTML = actualPending.map(r => {
-            let typeColor = r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60';
+            let typeColor = r.Type === 'REQUEST' ? '#e74c3c' : '#27ae60';
             // Find image
             const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
             const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
@@ -1931,8 +1931,8 @@ function renderApprovalList() {
                     <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
                     <td>${r.Quantity} <br><small>${r.Selected_Serial || ''}</small></td>
                     <td>
-                        <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Lulus</button>
-                        <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Tolak</button>
+                        <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Approve</button>
+                        <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Reject</button>
                     </td>
                 </tr>
             `;
@@ -1957,8 +1957,8 @@ function renderApprovalList() {
     // Helper to generate row HTML for history
     const renderHistoryRow = (r) => {
         let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
-        let statusText = r.Status === 'Approved' ? 'Lulus' : 'Ditolak';
-        let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${r.PDF_URL}')">Cetak</button>` : '-';
+        let statusText = r.Status === 'Approved' ? 'Approved' : 'Rejected';
+        let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${r.PDF_URL}')">Print</button>` : '-';
         const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
         const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
         return `
@@ -1966,7 +1966,7 @@ function renderApprovalList() {
                 <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
                 <td style="font-size:0.75rem;">${r.Timestamp}</td>
                 <td><strong>${r.Entered_By}</strong></td>
-                <td><span class="badge" style="background:${r.Type === 'AMBIL' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
+                <td><span class="badge" style="background:${r.Type === 'REQUEST' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
                 <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
                 <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
                 <td style="text-align:center;">${pdfBtn}</td>
@@ -2047,7 +2047,7 @@ window.filterDropdown = function(prefix, query) {
         });
         
         if (matched.length === 0) {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">None rekod peminjaman aktif untuk anda.</div>';
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">No active borrowing records for you.</div>';
             return;
         }
     } else {
@@ -2058,7 +2058,7 @@ window.filterDropdown = function(prefix, query) {
         });
         
         if (matched.length === 0) {
-            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">None item dijumpai</div>';
+            dropdown.innerHTML = '<div class="combo-item" style="color: var(--text-secondary)">No items found</div>';
             return;
         }
     }
@@ -2092,7 +2092,7 @@ window.filterDropdown = function(prefix, query) {
         </div>`;
     }).join('');
 
-    if (matched.length > displayLimit) html += `<div class="combo-item" style="text-align:center;">... lagi.</div>`;
+    if (matched.length > displayLimit) html += `<div class="combo-item" style="text-align:center;">... more.</div>`;
     dropdown.innerHTML = html;
 };
 
@@ -2224,23 +2224,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Override submitCart to prompt for signature first
 window.submitCart = function(type) {
-    let cart = type === 'AMBIL' ? outCart : retCart;
+    let cart = type === 'REQUEST' ? outCart : retCart;
     if (cart.length === 0) return showToast('Bakul anda kosong!', 'error');
 
     const staffName = document.getElementById('login-user').value || currentUser;
-    if (!staffName) return showToast('Sila log masuk dahulu!', 'error');
+    if (!staffName) return showToast('Please login first!', 'error');
 
     currentSignatureAction = { type: 'submitCart', payload: type };
     
     document.getElementById('signature-title').innerText = "Tandatangan Pemohon";
-    document.getElementById('signature-desc').innerText = "Sila tandatangan pengesahan untuk permohonan ini.";
+    document.getElementById('signature-desc').innerText = "Please sign to confirm this request.";
     clearSignature();
     document.getElementById('signature-modal').style.display = 'flex';
 };
 
 // Actual Submission
 async function doActualSubmitCart(type, sigBase64) {
-    let cart = type === 'AMBIL' ? outCart : retCart;
+    let cart = type === 'REQUEST' ? outCart : retCart;
     const staffName = document.getElementById('login-user').value || currentUser;
     const staffPin = document.getElementById('login-pin').value || currentUserPin;
 
@@ -2262,13 +2262,13 @@ async function doActualSubmitCart(type, sigBase64) {
         const data = await response.json();
         if (data.status === 'success') {
             showToast(data.message, 'success');
-            if (type === 'AMBIL') {
+            if (type === 'REQUEST') {
                 outCart = [];
-                renderCart('AMBIL');
+                renderCart('REQUEST');
                 document.getElementById('out-project').value = "";
             } else {
                 retCart = [];
-                renderCart('PULANG');
+                renderCart('RETURN');
             }
             await fetchItems();
             await fetchTransactions();
@@ -2286,7 +2286,7 @@ async function doActualSubmitCart(type, sigBase64) {
 // Override processRequest to prompt for signature on APPROVE
 window.processRequest = async function(reqId, actionStr) {
     if (actionStr === 'reject') {
-        if (!confirm('Adakah anda pasti mahu MENOLAK permohonan ini?')) return;
+        if (!confirm('Are you sure you want to REJECT this request?')) return;
         await doActualProcessRequest({ reqId, actionStr }, null);
         return;
     }
@@ -2294,7 +2294,7 @@ window.processRequest = async function(reqId, actionStr) {
     // If approve, request signature
     currentSignatureAction = { type: 'processRequest', payload: { reqId, actionStr } };
     document.getElementById('signature-title').innerText = "Tandatangan Pelulus (Admin)";
-    document.getElementById('signature-desc').innerText = "Sila sahkan kelulusan permohonan ini.";
+    document.getElementById('signature-desc').innerText = "Please confirm approval of this request.";
     clearSignature();
     document.getElementById('signature-modal').style.display = 'flex';
 };
@@ -2351,12 +2351,12 @@ window.renderProfileeHistory = async function() {
     if (!tbody) return;
 
     const nameDisplay = document.getElementById('profile-name-display');
-    if (nameDisplay) nameDisplay.innerText = currentUser || "Pengguna Tidak Dikenali";
+    if (nameDisplay) nameDisplay.innerText = currentUser || "Unknown User";
 
     // 1. Get user's pending requests
     const personalReqs = (pendingRequests || []).filter(r => r && r.Entered_By && r.Entered_By.trim() === currentUser.trim());
     
-    // 2. Get user's direct transactions (legacy AMBIL/PULANG, or DAFTAR/TAMBAH)
+    // 2. Get user's direct transactions (legacy REQUEST/RETURN, or REGISTER/ADD)
     const personalTrans = (allTransactions || []).filter(t => t && t.Entered_By && t.Entered_By.trim() === currentUser.trim());
 
     // 3. Merge them without duplicates
@@ -2365,8 +2365,8 @@ window.renderProfileeHistory = async function() {
         const exists = personalReqs.find(p => p.Timestamp === t.Timestamp && p.Item_ID === t.Item_ID);
         if (!exists) {
             // It's a direct transaction
-            let mockStatus = 'Lulus (Rekod Lama)';
-            if (t.Type === 'DAFTAR' || t.Type === 'TAMBAH') mockStatus = 'Selesai';
+            let mockStatus = 'Approved (Legacy Record)';
+            if (t.Type === 'DAFTAR' || t.Type === 'TAMBAH') mockStatus = 'Completed';
             t.Status = mockStatus;
             merged.push(t);
         }
@@ -2374,11 +2374,11 @@ window.renderProfileeHistory = async function() {
 
     const statsDisplay = document.getElementById('profile-stats-display');
     if (statsDisplay) {
-        statsDisplay.innerText = `Anda mempunyai ${merged.length} rekod transaksi setakat ini.`;
+        statsDisplay.innerText = `You have ${merged.length} transaction records so far.`;
     }
 
     if (!merged || merged.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None rekod permohonan peribadi.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No personal request records.</td></tr>';
         return;
     }
 
@@ -2411,13 +2411,13 @@ window.renderProfileeHistory = async function() {
         let statusColor = '#f39c12'; // Pending
         let statusText = 'Dalam Proses';
         
-        if (t.Status === 'Approved') { statusColor = '#27ae60'; statusText = 'Lulus'; }
-        else if (t.Status === 'Rejected') { statusColor = '#c0392b'; statusText = 'Ditolak'; }
+        if (t.Status === 'Approved') { statusColor = '#27ae60'; statusText = 'Approved'; }
+        else if (t.Status === 'Rejected') { statusColor = '#c0392b'; statusText = 'Rejected'; }
         else if (t.Status && t.Status !== 'Pending') { statusColor = '#2980b9'; statusText = t.Status; }
         
         let statusBadge = `<span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span>`;
         
-        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${t.PDF_URL}')">Cetak</button>` : '-';
+        let pdfBtn = t.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${t.PDF_URL}')">Print</button>` : '-';
 
         // Find image from masterItems
         const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
