@@ -17,22 +17,24 @@ let isAdmin = false;
 function getFirstImageUrl(imageUrl) {
     if (!imageUrl) return '';
     try {
-        if (imageUrl.startsWith('[') && imageUrl.endsWith(']')) {
-            const arr = JSON.parse(imageUrl);
+        let decoded = imageUrl.replace(/&quot;/g, '"');
+        if (decoded.startsWith('[') && decoded.endsWith(']')) {
+            const arr = JSON.parse(decoded);
             if (arr && arr.length > 0) return arr[0];
         }
     } catch(e) {}
-    return imageUrl;
+    return imageUrl.replace(/&quot;/g, '"');
 }
 
 function getAllImageUrls(imageUrl) {
     if (!imageUrl) return [];
     try {
-        if (imageUrl.startsWith('[') && imageUrl.endsWith(']')) {
-            return JSON.parse(imageUrl);
+        let decoded = imageUrl.replace(/&quot;/g, '"');
+        if (decoded.startsWith('[') && decoded.endsWith(']')) {
+            return JSON.parse(decoded);
         }
-    } catch(e) {}
-    return [imageUrl];
+    } catch (e) {}
+    return [imageUrl.replace(/&quot;/g, '"')];
 }
 
 function getThumbHtml(imageUrl, size = 40) {
@@ -712,23 +714,11 @@ function filterUnifiedDropdown(query) {
         const nameStyle = isDiscontinued ? 'text-decoration: line-through; color: #999;' : '';
         const badge = isDiscontinued ? `<span class="stock-badge badge-danger" style="font-size: 0.6rem; padding: 0.1rem 0.3rem; vertical-align: middle; margin-left: 5px;">Discontinued</span>` : '';
 
-        // Build thumbnail
-        const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'");
-        const thumbUrl = imageUrl ? (() => {
-            let u = imageUrl;
-            if (u.includes('drive.google.com/file/d/')) {
-                const m = u.match(/\/d\/([^/]+)\//);
-                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
-            } else if (u.includes('uc?export=view&id=')) {
-                const m = u.match(/id=(.*)/);
-                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
-            }
-            return u;
-        })() : '';
+        const thumbHtml = getThumbHtml(item.Image_URL || "", 40);
 
         return `
         <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "TIDAK"}')" style="display:flex; align-items:center; gap:0.6rem;">
-            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
+            ${thumbHtml}
             <div>
                 <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
                 <small style="color:var(--text-secondary)">Stok: ${item.Current_Stock || 0} ${item.Unit}</small>
@@ -2093,19 +2083,12 @@ window.filterDropdown = function(prefix, query) {
         const imageUrl = (item.Image_URL || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const perluPulang = (item.Perlu_Pulang || "TIDAK").trim().toUpperCase();
         
-        const thumbUrl = imageUrl ? (() => {
-            let u = imageUrl;
-            if (u.includes('drive.google.com/file/d/')) {
-                const m = u.match(/\/d\/([^/]+)\//);
-                if (m && m[1]) u = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w60`;
-            }
-            return u;
-        })() : '';
+        const thumbHtml = getThumbHtml(item.Image_URL || "", 40);
 
         let stockLabel = prefix === 'ret' ? "Hutang Pinjaman" : "Stok";
 
         return `<div class="combo-item" onclick="selectItem('${prefix}', '${item.Item_ID}', '${safeName}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Total_Quantity || 0}', '${hasSerial}', '${availSerials}', '${borSerials}', '${imageUrl}', '${perluPulang}', '${item.Borrow_ID || ''}')" style="display:flex; align-items:center; gap:0.6rem;">
-            ${thumbUrl ? `<img src="${thumbUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#f0f0f0;" onerror="this.style.display='none'">` : `<div style="width:40px; height:40px; border-radius:4px; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">📦</div>`}
+            ${thumbHtml}
             <div>
                 <strong>${item.Item_ID}</strong> - ${item.Item_Name} <br>
                 <small style="color:var(--text-secondary)">${stockLabel}: ${item.Current_Stock || 0} ${item.Unit}</small>
