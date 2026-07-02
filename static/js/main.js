@@ -1556,6 +1556,10 @@ function quickAddStock(id) {
     document.getElementById('add-search').value = id;
     filterUnifiedDropdown(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+        const qtyField = document.getElementById('add-qty');
+        if (qtyField) qtyField.focus();
+    }, 500);
 }
 
 window.openEditItemMode = function(id) {
@@ -1570,7 +1574,6 @@ window.openEditItemMode = function(id) {
     document.getElementById('add-search').value = id;
     filterUnifiedDropdown(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-}
     setTimeout(() => {
         const qtyField = document.getElementById('add-qty');
         if (qtyField) qtyField.focus();
