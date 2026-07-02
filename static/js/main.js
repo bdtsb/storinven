@@ -527,28 +527,41 @@ function selectItem(prefix, id, name, stock, unit, totalQty, hasSerial = "", ava
         stockEl.innerHTML += `<br><small style="color:var(--warning-color)">Maksimum pemulangan: ${maxReturn} ${unit}</small>`;
     }
 
-    const imgEl = document.getElementById(`${prefix}-item-image`);
-    if (imgEl) {
+    const container = document.getElementById(`${prefix}-item-image-container`);
+    if (container) {
         if (imageUrl && imageUrl.trim() !== "") {
-            let finalUrl = getFirstImageUrl(imageUrl);
-            // Convert standard Drive link or old uc link to reliable Thumbnail API link
-            if (finalUrl.includes("drive.google.com/file/d/")) {
-                const match = finalUrl.match(/\/d\/([^/]+)\//);
-
-                if (match && match[1]) {
-                    finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+            const urls = getAllImageUrls(imageUrl);
+            if (urls.length > 0) {
+                let html = `<div style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; align-items: center;">`;
+                for (let u of urls) {
+                    let finalUrl = u;
+                    if (finalUrl.includes("drive.google.com/file/d/")) {
+                        const match = finalUrl.match(/\/d\/([^/]+)\//);
+                        if (match && match[1]) {
+                            finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+                        }
+                    } else if (finalUrl.includes("uc?export=view&id=")) {
+                        const match = finalUrl.match(/id=(.*)/);
+                        if (match && match[1]) {
+                            finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+                        }
+                    }
+                    html += `<img src="${finalUrl}" alt="Image Item" style="scroll-snap-align: center; flex: 0 0 100%; max-width: 100%; max-height: 180px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border: 1px solid var(--border-color); padding: 6px; object-fit: contain;">`;
                 }
-            } else if (finalUrl.includes("uc?export=view&id=")) {
-                const match = finalUrl.match(/id=(.*)/);
-                if (match && match[1]) {
-                    finalUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+                html += `</div>`;
+                
+                if (urls.length > 1) {
+                    html += `<div style="text-align:center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">&#8592; Tatal untuk melihat ${urls.length} gambar &#8594;</div>`;
                 }
+                container.innerHTML = html;
+                container.style.display = "block";
+            } else {
+                container.style.display = "none";
+                container.innerHTML = `<img id="${prefix}-item-image" class="item-preview-img" src="" alt="Image Item" style="display:none;">`;
             }
-            imgEl.src = finalUrl;
-            imgEl.style.display = "block";
         } else {
-            imgEl.style.display = "none";
-            imgEl.src = "";
+            container.style.display = "none";
+            container.innerHTML = `<img id="${prefix}-item-image" class="item-preview-img" src="" alt="Image Item" style="display:none;">`;
         }
     }
 
@@ -583,7 +596,7 @@ function showUnifiedDropdown() {
     filterUnifiedDropdown(document.getElementById(`add-search`).value);
 }
 
-function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulang) {
+function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulang, punyaSerial = "TIDAK", serialTersedia = "") {
     document.getElementById('add-search').value = id; // Just show ID in search bar
     document.getElementById('add-dropdown').classList.remove('active');
 
@@ -602,6 +615,20 @@ function selectUnifiedItem(id, name, stock, unit, category, minStock, perluPulan
         document.getElementById('add-perlu-pulang-ya').checked = true;
     } else {
         document.getElementById('add-perlu-pulang-tidak').checked = true;
+    }
+
+    // Set serial number info
+    const hasSerialCheckbox = document.getElementById('add-has-serial');
+    const serialContainer = document.getElementById('serial-input-container');
+    const serialInput = document.getElementById('add-serials');
+    if (String(punyaSerial).trim().toUpperCase() === "YA") {
+        hasSerialCheckbox.checked = true;
+        serialContainer.style.display = 'block';
+        serialInput.value = (serialTersedia || "").replace(/&quot;/g, '"');
+    } else {
+        hasSerialCheckbox.checked = false;
+        serialContainer.style.display = 'none';
+        serialInput.value = "";
     }
 
     // Keep fields visible for editing
@@ -637,6 +664,20 @@ function filterUnifiedDropdown(query) {
             document.getElementById('add-perlu-pulang-ya').checked = true;
         } else {
             document.getElementById('add-perlu-pulang-tidak').checked = true;
+        }
+
+        // Set serial number info
+        const hasSerialCheckbox = document.getElementById('add-has-serial');
+        const serialContainer = document.getElementById('serial-input-container');
+        const serialInput = document.getElementById('add-serials');
+        if (String(exactMatch.Punya_Serial).trim().toUpperCase() === "YA") {
+            hasSerialCheckbox.checked = true;
+            serialContainer.style.display = 'block';
+            serialInput.value = exactMatch.Serial_Tersedia || "";
+        } else {
+            hasSerialCheckbox.checked = false;
+            serialContainer.style.display = 'none';
+            serialInput.value = "";
         }
 
         // Load existing images
@@ -716,8 +757,11 @@ function filterUnifiedDropdown(query) {
 
         const thumbHtml = getThumbHtml(item.Image_URL || "", 40);
 
+        const hasSerial = (item.Punya_Serial || "").trim().toUpperCase() === "YA" ? "YA" : "TIDAK";
+        const availSerials = (item.Serial_Tersedia || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
         return `
-        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "TIDAK"}')" style="display:flex; align-items:center; gap:0.6rem;">
+        <div class="combo-item" onclick="selectUnifiedItem('${item.Item_ID}', '${item.Item_Name.replace(/'/g, "\\'")}', '${item.Current_Stock || 0}', '${item.Unit}', '${item.Category}', '${item.Min_Stock}', '${item.Perlu_Pulang || "TIDAK"}', '${hasSerial}', '${availSerials}')" style="display:flex; align-items:center; gap:0.6rem;">
             ${thumbHtml}
             <div>
                 <strong>${item.Item_ID}</strong> - <span style="${nameStyle}">${item.Item_Name}</span>${badge} <br>
