@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('header-refresh-btn')) document.getElementById('header-refresh-btn').style.display = 'inline-block';
 
             if (isAdmin) {
-                if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
-                if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
+                if (document.getElementById('nav-btn-admin')) document.getElementById('nav-btn-admin').style.display = 'inline-block';
+                if (document.getElementById('nav-btn-approval')) document.getElementById('nav-btn-approval').style.display = 'inline-block';
             }
 
             document.getElementById('global-login-modal').style.display = 'none';
@@ -766,13 +766,13 @@ function filterUnifiedDropdown(query) {
     if (q.length === 0) {
         const nextId = generateNextId();
         html += `<div class="combo-item" style="color: var(--primary-color); font-weight:bold; cursor:pointer; background-color: #f0f4fc; border-bottom: 2px solid var(--border-color);" onclick="setSearchToNextId('${nextId}')">
-            ✨ [KLIK DI SINI] JANA ID AUTOMATIK JIKA BARANG BARU (Auto-ID: ${nextId})
+            ✨ [CLICK HERE] GENERATE AUTO ID FOR NEW ITEM (Auto-ID: ${nextId})
         </div>`;
     }
 
     if (filtered.length === 0) {
         if (q.length > 0) {
-            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold;">✨ Registering New ID: ${q.toUpperCase()}</div>`;
+            html += `<div class="combo-item" style="color: var(--success-color); font-weight:bold; cursor:pointer;" onclick="setSearchToNextId(\'${q.toUpperCase()}\')">✨ Registering New ID: ${q.toUpperCase()}</div>`;
         }
         dropdown.innerHTML = html;
         return;
@@ -1062,8 +1062,8 @@ async function submitLogin() {
 
             // Show admin tab if authorized
             if (isAdmin) {
-                if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
-                if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
+                if (document.getElementById('nav-btn-admin')) document.getElementById('nav-btn-admin').style.display = 'inline-block';
+                if (document.getElementById('nav-btn-approval')) document.getElementById('nav-btn-approval').style.display = 'inline-block';
             }
 
             // Save to localStorage
@@ -1235,6 +1235,11 @@ function handleImageSelection(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('add-attachment-base64').value = e.target.result;
+            document.getElementById('attachment-preview-container').style.display = 'none';
+            if (document.getElementById('attachment-filename-display')) {
+                document.getElementById('attachment-filename-display').textContent = '📄 ' + file.name;
+                document.getElementById('attachment-filename-display').style.display = 'block';
+            }
             showToast('PDF attached successfully.');
         };
         reader.readAsDataURL(file);
@@ -1818,8 +1823,8 @@ const originalSubmitLogin = submitLogin;
 window.submitLogin = async function() {
     await originalSubmitLogin();
     if (isAdmin) {
-        if (document.getElementById('btn-tab-admin')) document.getElementById('btn-tab-admin').style.display = 'inline-block';
-        if (document.getElementById('profile-admin-actions')) document.getElementById('profile-admin-actions').style.display = 'flex';
+        if (document.getElementById('nav-btn-admin')) document.getElementById('nav-btn-admin').style.display = 'inline-block';
+                if (document.getElementById('nav-btn-approval')) document.getElementById('nav-btn-approval').style.display = 'inline-block';
         // Auto fetch requests for Admin
         await fetchPendingRequests();
         updateApprovalBadge();
@@ -1839,6 +1844,10 @@ window.clearAttachment = function() {
     document.getElementById('add-attachment-base64').value = '';
     document.getElementById('attachment-preview-container').style.display = 'none';
     document.getElementById('attachment-preview').src = '';
+    if (document.getElementById('attachment-filename-display')) {
+        document.getElementById('attachment-filename-display').style.display = 'none';
+        document.getElementById('attachment-filename-display').textContent = '';
+    }
 };
 
 window.handleAttachmentSelection = function(event) {
@@ -1854,6 +1863,11 @@ window.handleAttachmentSelection = function(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('add-attachment-base64').value = e.target.result;
+            document.getElementById('attachment-preview-container').style.display = 'none';
+            if (document.getElementById('attachment-filename-display')) {
+                document.getElementById('attachment-filename-display').textContent = '📄 ' + file.name;
+                document.getElementById('attachment-filename-display').style.display = 'block';
+            }
             showToast('PDF attached successfully.');
         };
         reader.readAsDataURL(file);
@@ -1891,6 +1905,10 @@ window.handleAttachmentSelection = function(event) {
             document.getElementById('add-attachment-base64').value = dataUrl;
             document.getElementById('attachment-preview').src = dataUrl;
             document.getElementById('attachment-preview-container').style.display = 'block';
+            if (document.getElementById('attachment-filename-display')) {
+                document.getElementById('attachment-filename-display').textContent = '🖼️ ' + file.name;
+                document.getElementById('attachment-filename-display').style.display = 'block';
+            }
         };
         img.src = e.target.result;
     };
@@ -1926,11 +1944,14 @@ function updateApprovalBadge() {
         return;
     }
 
-    const count = (pendingRequests || []).filter(r => r.Status === 'Pending').length;
+        const count = (pendingRequests || []).filter(r => r.Status === 'Pending').length;
     if (count > 0) {
-        // Admin only sees indicator dot, no badge on tab to avoid confusion with personal profile
-        badge.style.display = 'none'; 
+        badge.textContent = count;
+        badge.style.display = 'inline-block'; 
         indicator.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+        indicator.style.display = 'none';
     } else {
         badge.style.display = 'none';
         indicator.style.display = 'none';
@@ -2500,6 +2521,11 @@ window.handleMultiImageSelection = function(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('add-attachment-base64').value = e.target.result;
+            document.getElementById('attachment-preview-container').style.display = 'none';
+            if (document.getElementById('attachment-filename-display')) {
+                document.getElementById('attachment-filename-display').textContent = '📄 ' + file.name;
+                document.getElementById('attachment-filename-display').style.display = 'block';
+            }
             showToast('PDF attached successfully.');
         };
         reader.readAsDataURL(file);
