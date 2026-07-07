@@ -1952,9 +1952,6 @@ function updateApprovalBadge() {
     } else {
         badge.style.display = 'none';
         indicator.style.display = 'none';
-    } else {
-        badge.style.display = 'none';
-        indicator.style.display = 'none';
     }
 }
 
