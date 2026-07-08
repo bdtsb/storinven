@@ -778,6 +778,22 @@
         </div>
     </div>
 
+    <!-- Batch Preview Modal -->
+    <div class="modal-overlay" id="batch-preview-modal">
+        <div class="modal-content" style="max-width: 500px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.2rem; color: var(--primary-color);">Batch Items Preview</h3>
+                <button onclick="document.getElementById('batch-preview-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <div id="batch-preview-list" style="max-height: 60vh; overflow-y: auto; text-align: left;">
+                <!-- Items will be injected here -->
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button class="btn-cancel" onclick="document.getElementById('batch-preview-modal').style.display='none'" style="width: 100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Confirmation Modal -->
     <div class="modal-overlay" id="confirm-action-modal">
         <div class="modal-content" style="border-top: 5px solid var(--primary-color);">

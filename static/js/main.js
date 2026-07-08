@@ -1993,7 +1993,11 @@ function renderApprovalList() {
                     <td style="font-size:0.75rem;">${first.Timestamp}</td>
                     <td><strong>${first.Entered_By}</strong></td>
                     <td><span class="badge" style="background:${typeColor}">${first.Type}</span></td>
-                    <td>${itemCount === 1 ? first.Item_ID : 'Batch Request'}<br><small>${itemNames}</small></td>
+                    <td>
+                        ${itemCount === 1 ? first.Item_ID : 'Batch Request'}<br>
+                        <small>${itemNames}</small>
+                        ${itemCount > 1 ? `<br><a href="#" onclick="showBatchPreview('${first.Req_ID}'); return false;" style="color:var(--primary-color); font-size:0.75rem; text-decoration:underline; display:inline-block; margin-top:3px;">View All Items</a>` : ''}
+                    </td>
                     <td>${qtyTotal} <br><small>${itemCount === 1 ? (first.Selected_Serial || '') : '(' + itemCount + ' jenis)'}</small></td>
                     <td>
                         <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${first.Req_ID}', 'approve')">Approve</button>
@@ -2052,7 +2056,11 @@ function renderApprovalList() {
                 <td style="font-size:0.75rem;">${r.Timestamp}</td>
                 <td><strong>${r.Entered_By}</strong></td>
                 <td><span class="badge" style="background:${r.Type === 'REQUEST' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
-                <td>${r._itemCount === 1 ? r.Item_ID : 'Batch Request'}<br><small>${r._itemNames}</small></td>
+                <td>
+                    ${r._itemCount === 1 ? r.Item_ID : 'Batch Request'}<br>
+                    <small>${r._itemNames}</small>
+                    ${r._itemCount > 1 ? `<br><a href="#" onclick="showBatchPreview('${r.Req_ID}'); return false;" style="color:var(--primary-color); font-size:0.75rem; text-decoration:underline; display:inline-block; margin-top:3px;">View All Items</a>` : ''}
+                </td>
                 <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
                 <td style="text-align:center;">${pdfBtn}</td>
             </tr>
@@ -2666,3 +2674,49 @@ window.clearMultiImage = function() {
     if (base64Input) base64Input.value = '';
     window.renderMultiImagePreview();
 }
+
+window.showBatchPreview = function(reqId) {
+    if (!pendingRequests) return;
+    
+    const items = pendingRequests.filter(r => String(r.Req_ID) === String(reqId));
+    if (items.length === 0) return;
+    
+    const first = items[0];
+    const typeColor = first.Type === 'REQUEST' ? '#e74c3c' : '#27ae60';
+    
+    let html = `
+        <div style="margin-bottom:15px; font-size:0.9rem;">
+            <p style="margin:2px 0;"><strong>Request ID:</strong> ${reqId}</p>
+            <p style="margin:2px 0;"><strong>By:</strong> ${first.Entered_By}</p>
+            <p style="margin:2px 0;"><strong>Type:</strong> <span class="badge" style="background:${typeColor}; font-size:0.7rem; padding: 2px 6px;">${first.Type}</span></p>
+            <p style="margin:2px 0;"><strong>Time:</strong> ${first.Timestamp}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+                <tr style="background:#f9f9f9; border-bottom: 2px solid #ddd;">
+                    <th style="padding:8px; border:1px solid #ddd; text-align:left;">Item</th>
+                    <th style="padding:8px; border:1px solid #ddd; text-align:center; width:60px;">Qty</th>
+                    <th style="padding:8px; border:1px solid #ddd; text-align:center;">S/N</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    items.forEach(r => {
+        html += `
+            <tr>
+                <td style="padding:8px; border:1px solid #ddd;">
+                    <strong>${r.Item_ID}</strong><br>
+                    <small style="color:#666;">${r.Item_Name}</small>
+                </td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center;">${r.Quantity}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center;">${r.Selected_Serial || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    html += `</tbody></table>`;
+    
+    document.getElementById('batch-preview-list').innerHTML = html;
+    document.getElementById('batch-preview-modal').style.display = 'flex';
+};
