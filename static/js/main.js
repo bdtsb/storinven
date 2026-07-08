@@ -1962,26 +1962,42 @@ function renderApprovalList() {
     // Filter only Pending items for admin approval view
     const actualPending = (pendingRequests || []).filter(r => r.Status === 'Pending');
 
-    if (actualPending.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">None permohonan menunggu kelulusan.</td></tr>';
+    const pendingGroups = {};
+    actualPending.forEach(r => {
+        if (!pendingGroups[r.Req_ID]) pendingGroups[r.Req_ID] = [];
+        pendingGroups[r.Req_ID].push(r);
+    });
+    const groupedPending = Object.values(pendingGroups);
+
+    if (groupedPending.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada permohonan menunggu kelulusan.</td></tr>';
     } else {
-        tbody.innerHTML = actualPending.map(r => {
-            let typeColor = r.Type === 'REQUEST' ? '#e74c3c' : '#27ae60';
-            // Find image
-            const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
-            const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+        tbody.innerHTML = groupedPending.map(group => {
+            const first = group[0];
+            let typeColor = first.Type === 'REQUEST' ? '#e74c3c' : '#27ae60';
+            const itemCount = group.length;
+            let itemNames = group.map(r => r.Item_Name).join(', ');
+            if (itemNames.length > 30) itemNames = itemNames.substring(0, 30) + '...';
+            let qtyTotal = group.reduce((sum, r) => sum + parseInt(r.Quantity||0), 0);
+
+            // Thumbnail logic: If 1 item, show its image. If multiple, show count.
+            let thumb = `<div style="background:#f0f0f0; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; margin:auto; color:#555;">${itemCount}</div>`;
+            if (itemCount === 1) {
+                const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(first.Item_ID).toUpperCase());
+                thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+            }
 
             return `
                 <tr>
                     <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
-                    <td style="font-size:0.75rem;">${r.Timestamp}</td>
-                    <td><strong>${r.Entered_By}</strong></td>
-                    <td><span class="badge" style="background:${typeColor}">${r.Type}</span></td>
-                    <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
-                    <td>${r.Quantity} <br><small>${r.Selected_Serial || ''}</small></td>
+                    <td style="font-size:0.75rem;">${first.Timestamp}</td>
+                    <td><strong>${first.Entered_By}</strong></td>
+                    <td><span class="badge" style="background:${typeColor}">${first.Type}</span></td>
+                    <td>${itemCount === 1 ? first.Item_ID : 'Batch Request'}<br><small>${itemNames}</small></td>
+                    <td>${qtyTotal} <br><small>${itemCount === 1 ? (first.Selected_Serial || '') : '(' + itemCount + ' jenis)'}</small></td>
                     <td>
-                        <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${r.Req_ID}', 'approve')">Approve</button>
-                        <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${r.Req_ID}', 'reject')">Reject</button>
+                        <button class="btn-submit" style="background:#27ae60; padding:5px 10px; font-size:0.75rem; margin-bottom:5px; width:100%;" onclick="processRequest('${first.Req_ID}', 'approve')">Approve</button>
+                        <button class="btn-cancel" style="padding:5px 10px; font-size:0.75rem; width:100%; margin:0;" onclick="processRequest('${first.Req_ID}', 'reject')">Reject</button>
                     </td>
                 </tr>
             `;
@@ -2001,22 +2017,42 @@ function renderApprovalList() {
         return new Date(year, month, day, hour, minute).getTime();
     };
 
-    const history = (pendingRequests || []).filter(r => r.Status === 'Approved' || r.Status === 'Rejected');
+    const rawHistory = (pendingRequests || []).filter(r => r.Status === 'Approved' || r.Status === 'Rejected');
+    const historyGroups = {};
+    rawHistory.forEach(r => {
+        if (!historyGroups[r.Req_ID]) historyGroups[r.Req_ID] = [];
+        historyGroups[r.Req_ID].push(r);
+    });
+    const history = Object.values(historyGroups).map(group => {
+        const first = group[0];
+        const itemCount = group.length;
+        let itemNames = group.map(r => r.Item_Name).join(', ');
+        if (itemNames.length > 30) itemNames = itemNames.substring(0, 30) + '...';
+        first._itemCount = itemCount;
+        first._itemNames = itemNames;
+        first._qtyTotal = group.reduce((sum, r) => sum + parseInt(r.Quantity||0), 0);
+        return first; // Use the first item to represent the batch
+    });
 
     // Helper to generate row HTML for history
     const renderHistoryRow = (r) => {
         let statusColor = r.Status === 'Approved' ? '#27ae60' : '#c0392b';
         let statusText = r.Status === 'Approved' ? 'Approved' : 'Rejected';
         let pdfBtn = r.PDF_URL ? `<button class="btn-submit" style="padding: 2px 8px; font-size: 0.7rem; margin: 0; background: #e67e22;" onclick="openDirectPdf('${r.PDF_URL}')">Print</button>` : '-';
-        const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
-        const thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+        
+        let thumb = `<div style="background:#f0f0f0; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; margin:auto; color:#555;">${r._itemCount}</div>`;
+        if (r._itemCount === 1) {
+            const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(r.Item_ID).toUpperCase());
+            thumb = getThumbHtml(master ? master.Image_URL : '', 40);
+        }
+
         return `
             <tr>
                 <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
                 <td style="font-size:0.75rem;">${r.Timestamp}</td>
                 <td><strong>${r.Entered_By}</strong></td>
                 <td><span class="badge" style="background:${r.Type === 'REQUEST' ? '#e74c3c' : '#27ae60'}">${r.Type}</span></td>
-                <td>${r.Item_ID}<br><small>${r.Item_Name}</small></td>
+                <td>${r._itemCount === 1 ? r.Item_ID : 'Batch Request'}<br><small>${r._itemNames}</small></td>
                 <td style="text-align:center;"><span style="background:${statusColor}; color:white; padding:3px 6px; border-radius:4px; font-size:0.7rem; white-space:nowrap;">${statusText}</span></td>
                 <td style="text-align:center;">${pdfBtn}</td>
             </tr>
