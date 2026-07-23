@@ -367,14 +367,13 @@ function renderRecentTransactions(transactions) {
             if (!t) return '';
             let badgeClass = 'badge-tambah';
             let typeDisplay = 'ADD';
-            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
-            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
-            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
+            if (t.Type === 'AMBIL' || t.Type === 'REQUEST' || t.Type === 'REQUEST (Batch)') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            else if (t.Type === 'PULANG' || t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            else if (t.Type === 'DAFTAR' || t.Type === 'REGISTER') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+            else if (t.Type === 'TAMBAH' || t.Type === 'ADD') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
             // Fallbacks for old sheet data
-            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
-            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
+            else if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            else if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
 
             // Find image from masterItems
             const master = masterItems.find(m => String(m.Item_ID).toUpperCase() === String(t.Item_ID).toUpperCase());
@@ -425,14 +424,13 @@ function renderProfileeHistory(sortedTransactions) {
             if (!t) return '';
             let badgeClass = 'badge-tambah';
             let typeDisplay = 'ADD';
-            if (t.Type === 'AMBIL') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
-            if (t.Type === 'DAFTAR') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
-            if (t.Type === 'TAMBAH') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
+            if (t.Type === 'AMBIL' || t.Type === 'REQUEST' || t.Type === 'REQUEST (Batch)') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            else if (t.Type === 'PULANG' || t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+            else if (t.Type === 'DAFTAR' || t.Type === 'REGISTER') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+            else if (t.Type === 'TAMBAH' || t.Type === 'ADD') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
             // Fallbacks for old sheet data
-            if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
-            if (t.Type === 'PULANG') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
-            if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
+            else if (t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+            else if (t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
 
             return `
             <tr>
@@ -2490,9 +2488,12 @@ window.renderProfileeHistory = async function() {
     tbody.innerHTML = merged.map(t => {
         if (!t) return '';
         let badgeClass = 'badge-tambah';
-        if (t.Type === 'AMBIL') badgeClass = 'badge-ambil';
-        if (t.Type === 'PULANG') badgeClass = 'badge-pulang';
-        if (t.Type === 'DAFTAR') badgeClass = 'badge-daftar';
+        let typeDisplay = t.Type || 'ADD';
+        if (t.Type === 'AMBIL' || t.Type === 'REQUEST' || t.Type === 'REQUEST (Batch)' || t.Type === 'STOCK_OUT') { badgeClass = 'badge-ambil'; typeDisplay = 'REQUEST'; }
+        else if (t.Type === 'PULANG' || t.Type === 'RETURN') { badgeClass = 'badge-pulang'; typeDisplay = 'RETURN'; }
+        else if (t.Type === 'DAFTAR' || t.Type === 'REGISTER') { badgeClass = 'badge-daftar'; typeDisplay = 'REGISTER'; }
+        else if (t.Type === 'TAMBAH' || t.Type === 'ADD' || t.Type === 'STOCK_IN') { badgeClass = 'badge-tambah'; typeDisplay = 'ADD'; }
+
         
         let statusColor = '#f39c12'; // Pending
         let statusText = 'Dalam Proses';
@@ -2513,7 +2514,7 @@ window.renderProfileeHistory = async function() {
         <tr>
             <td style="text-align:center; padding: 0.4rem;">${thumb}</td>
             <td style="font-size: 0.75rem; white-space: nowrap;">${formatTimestamp(t.Timestamp)}</td>
-            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${t.Type}</span></td>
+            <td><span class="badge ${badgeClass}" style="white-space: nowrap;">${typeDisplay}</span></td>
             <td><strong>${t.Item_ID || '-'}</strong><br><small style="color:var(--text-secondary)">${t.Item_Name || '-'}</small></td>
             <td><strong>${t.Quantity || 0}</strong></td>
             <td style="font-size: 0.75rem; word-break: break-word;">${t.Project || t.Remarks || '-'}</td>
